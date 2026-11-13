@@ -2,6 +2,12 @@
 
 Primeira versão funcional independente. React 19 + TypeScript + Phaser 3 + Vite.
 
+## Idiomas
+
+O jogo começa em inglês. O seletor no cabeçalho permite mudar para português de Portugal; a escolha fica guardada neste navegador. Interface, nomes no mapa, perfis, atividades, conversas locais e acontecimentos conhecidos são traduzidos sem reiniciar o mundo, incluindo gravações da alpha anterior. Os nomes Mira, Theo e Luma mantêm-se.
+
+`src/i18n.ts` centraliza o texto de apresentação e mantém a compatibilidade com memórias existentes. Respostas futuras de IA devem ser geradas no idioma escolhido; texto desconhecido é preservado.
+
 ## Experimentar
 
 Requer Node.js 20.19+ ou 22.12+.
