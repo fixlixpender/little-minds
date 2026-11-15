@@ -6,6 +6,15 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+  'UM LUGAR NA ILHA':'A PLACE ON THE ISLAND', 'A tua personagem':'Your character', 'Editar personagem':'Edit character',
+  'Escolhe como queres chegar à Aurora. Podes mudar mais tarde.':'Choose how you arrive on Aurora. You can change this later.',
+  'Nome':'Name', 'Como te chamas?':'What’s your name?', 'Até 20 caracteres. Guardado apenas neste navegador.':'Up to 20 characters. Saved only in this browser.',
+  'Tom de pele':'Skin tone','Cabelo':'Hairstyle','Cor do cabelo':'Hair colour','Roupa':'Outfit',
+  'Areia':'Sand','Pêssego':'Peach','Quente':'Warm','Castanho':'Brown','Escuro':'Deep',
+  'Curto':'Short','Comprido':'Long','Crista':'Crest','Preto':'Black','Dourado':'Golden','Grisalho':'Silver','Ruivo':'Auburn',
+  'Sálvia':'Sage','Oceano':'Ocean','Ocre':'Ochre','Lavanda':'Lavender','Rosa':'Rose',
+  'Cancelar':'Cancel','Guardar e explorar':'Save and explore',
+  'A tua personagem está pronta. A ilha espera por ti!':'Your character is ready. The island is waiting for you!',
   'Little Minds início':'Little Minds home',
   'PEQUENAS VIDAS. GRANDES HISTÓRIAS.':'LITTLE LIVES. BIG STORIES.',
   'Ilha Aurora':'Aurora Island', 'ILHA AURORA':'AURORA ISLAND',
