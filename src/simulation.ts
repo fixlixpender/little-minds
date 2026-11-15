@@ -1,6 +1,6 @@
 export type PersonId='mira'|'theo'|'luma';
 export type Point={x:number;y:number};
-export const places={praca:{x:460,y:350},horta:{x:300,y:300},floresta:{x:300,y:170},lago:{x:640,y:305},cais:{x:510,y:520},farol:{x:820,y:170},mira:{x:320,y:420},theo:{x:560,y:415},luma:{x:610,y:195}};
+export const places={praca:{x:460,y:350},horta:{x:300,y:300},floresta:{x:300,y:170},lago:{x:640,y:315},cais:{x:510,y:520},farol:{x:820,y:170},mira:{x:320,y:420},theo:{x:560,y:415},luma:{x:610,y:195}};
 export type Place=keyof typeof places;
 export const profiles={mira:{name:'Mira',role:'Botânica',color:'#b3cc9d',traits:'Introvertida · curiosa · cautelosa',quote:'Há coisas que só crescem quando lhes damos tempo.'},theo:{name:'Theo',role:'Inventor',color:'#e6b56f',traits:'Criativo · impulsivo · bem-humorado',quote:'E se a solução estiver na peça que sobrou?'},luma:{name:'Luma',role:'Astrónoma',color:'#b8afe0',traits:'Independente · filosófica · curiosa',quote:'Pergunto-me quem terá apagado a última luz do farol.'}};
 export type Resident={id:PersonId;x:number;y:number;target:Place;activity:string;energy:number};

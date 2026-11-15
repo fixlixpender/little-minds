@@ -22,6 +22,8 @@ Abrir o endereço mostrado pelo Vite (normalmente http://localhost:5173).
 - **Observador:** selecionar habitantes no mapa ou nos cartões; acompanhar rotinas e diário.
 - **Habitante:** WASD/setas, botões direcionais ou tocar/clicar no terreno. E ou Conversar perto de um habitante.
 - Pausar e alternar velocidades 1×, 3×, 10×. Um dia completo dura 12 minutos a 1×.
+- Clicar no terreno traça um percurso seguro em redor das casas e do lago, com linha e marcador de destino. WASD/setas ou controlos táteis assumem o movimento manual e cancelam esse percurso.
+- O cais pode ser percorrido até à ponta. Clicar na água ou num edifício cancela o destino. Árvores e mobiliário continuam decorativos nesta alpha.
 - O botão de som ativa ambiente marítimo sintetizado localmente.
 - O progresso é guardado automaticamente a cada 3 segundos no navegador, com a chave `little-minds:aurora:v1`.
 - O tempo fica suspenso quando a aplicação está fechada. Não há processos em segundo plano.
@@ -37,6 +39,7 @@ npm run build
 
 - `src/simulation.ts`: estado versionado, relógio, decisões locais, rotinas individuais, energia, relações, diário e serialização.
 - `src/Island.ts`: cena Phaser, mapa pixel art determinístico desenhado por código, sprites animados, navegação em grelha, colisões, ondas, pirilampos e iluminação noturna.
+- `src/navigation.ts`: terreno transitável, colisões, recuperação de posições antigas e percursos partilhados pelo jogador e habitantes.
 - `src/main.tsx`: interface React, modos, controlos móveis, conversas locais e ciclo de gravação.
 - `src/style.css`: interface responsiva.
 
