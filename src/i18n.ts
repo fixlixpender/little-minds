@@ -6,6 +6,13 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+  'o seu dia':'their day','a ilha':'the island','companhia':'company',
+  'UM ENCONTRO NA ILHA':'AN ISLAND ENCOUNTER','O que gostavas de dizer?':'What would you like to say?',
+  'Como está a correr o teu dia?':'How is your day going?','Conta-me algo sobre a ilha.':'Tell me something about the island.',
+  'Posso fazer-te companhia?':'May I keep you company?','Laço contigo':'Your bond','A conhecer-te':'Getting to know you',
+  'Familiaridade':'Familiar faces','Amizade':'Friends','Um pequeno laço cresceu.':'A little bond has grown.',
+  'A amizade cresce com tempo, não com pressa.':'Friendship grows with time, not in a hurry.',
+  'Último encontro':'Last encounter','Até já':'See you soon',
   'UM LUGAR NA ILHA':'A PLACE ON THE ISLAND', 'A tua personagem':'Your character', 'Editar personagem':'Edit character',
   'Escolhe como queres chegar à Aurora. Podes mudar mais tarde.':'Choose how you arrive on Aurora. You can change this later.',
   'Nome':'Name', 'Como te chamas?':'What’s your name?', 'Até 20 caracteres. Guardado apenas neste navegador.':'Up to 20 characters. Saved only in this browser.',
