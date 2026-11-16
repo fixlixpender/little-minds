@@ -6,6 +6,23 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+  'UM MOMENTO JUNTOS':'A MOMENT TOGETHER','Cuidar da horta':'Tend the garden','Testar o pequeno barco':'Test the little boat','Desenhar uma constelação':'Sketch a constellation',
+  'Rega as sementes com a Mira. Fiquem juntos junto aos canteiros durante alguns instantes.':'Water the seedlings with Mira. Spend a few moments together beside the garden beds.',
+  'Junta-te ao Theo no cais e ajuda-o a testar a sua invenção. Desta vez, talvez flutue mais tempo.':'Join Theo at the pier and help test his invention. Perhaps it will float a little longer this time.',
+  'Encontra-te com a Luma junto ao farol e observa as estrelas. Há um céu inteiro para descobrir.':'Meet Luma beside the lighthouse and watch the stars. There’s a whole sky to discover.',
+  'Combinar atividade':'Arrange activity','Já tens uma atividade combinada.':'You already have an activity planned.',
+  'Já partilharam este momento hoje. Volta amanhã.':'You shared this moment today. Come back tomorrow.',
+  'Podem observar o céu entre as 19:00 e as 05:00.':'You can watch the sky between 19:00 and 05:00.',
+  'Esta atividade está disponível durante o dia.':'This activity is available during the day.',
+  'Atividade em curso':'Current activity','Cancelar atividade':'Cancel activity','Progresso da atividade':'Activity progress','Ir para o local':'Go to the meeting place',
+  'Vai até ao local combinado.':'Head to the meeting place.',
+  'O habitante está a caminho. Espera um bocadinho.':'Your companion is on the way. Wait a little while.',
+  'Estão a partilhar este momento. Fica por perto.':'You’re sharing this moment. Stay nearby.',
+  'Têm três horas da ilha para se encontrarem. Podes cancelar sem perder amizade.':'You have three island hours to meet. You can cancel without losing friendship.',
+  'A ilha que construímos':'The island we’re growing','Os teus pequenos gestos ficam.':'Your little gestures leave a mark.',
+  'Cuidados com a horta':'Garden visits','Testes do barco':'Boat tests','Mapas do céu':'Sky charts',
+  'Aproxima-te de um habitante e conversa para combinar uma atividade.':'Talk to an islander nearby to arrange an activity.',
+  'A cuidar da horta contigo':'Tending the garden with you','A testar o barco contigo':'Testing the boat with you','A observar o céu contigo':'Watching the sky with you',
   'o seu dia':'their day','a ilha':'the island','companhia':'company',
   'UM ENCONTRO NA ILHA':'AN ISLAND ENCOUNTER','O que gostavas de dizer?':'What would you like to say?',
   'Como está a correr o teu dia?':'How is your day going?','Conta-me algo sobre a ilha.':'Tell me something about the island.',

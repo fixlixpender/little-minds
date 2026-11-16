@@ -1,3 +1,5 @@
+import {activities} from './activityState';
+import {activityEventText,activityMemory} from './activities';
 import{log,profiles,type Entry,type PersonId,type World}from './simulation';
 import{t,type Language}from './i18n';
 import type{Topic}from './socialState';
@@ -48,11 +50,13 @@ export function talk(world:World,id:PersonId,topic:Topic):{reply:string;gain:num
  return{reply,gain,recorded:true};
 }
 export function eventText(entry:Entry,language:Language):string{
+ if(entry.shared&&Object.hasOwn(activities,entry.shared.task)&&['started','completed','cancelled','expired'].includes(entry.shared.phase))return activityEventText(entry.shared.task,entry.shared.phase,language);
  const record=entry.conversation;
  if(record&&entry.person&&profiles[entry.person]&&replies[record.reply])return language==='en'?`You talked to ${profiles[entry.person].name}: “${replyText(record.reply,language)}”`:`Conversaste com ${profiles[entry.person].name}: “${replyText(record.reply,language)}”`;
  return t(entry.text,language);
 }
 export function greeting(world:World,id:PersonId,language:Language):string{
+ const memory=activityMemory(world,id,language);if(memory)return memory;
  const known=world.playerBonds[id].talkCount>0;
  const lines:Record<PersonId,[Line,Line]>={
  mira:[line('Oh… hello. It’s nice to meet you.','Oh… olá. É bom conhecer-te.'),line('It’s good to see you again. I remember our little conversation.','É bom voltar a ver-te. Lembro-me da nossa conversa.')],

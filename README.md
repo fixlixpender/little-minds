@@ -23,6 +23,9 @@ Abrir o endereço mostrado pelo Vite (normalmente http://localhost:5173).
 - **Personagem:** no cabeçalho, abrir Your character / A tua personagem para escolher nome, tom de pele, penteado e cores. Há pré-visualização; Guardar e explorar aplica as escolhas no mapa e grava-as imediatamente no navegador. Cancelar descarta alterações. O editor também abre na primeira entrada no modo Habitante.
 - **Habitante:** WASD/setas, botões direcionais ou tocar/clicar no terreno. E ou Conversar perto de um habitante.
 - **Conversas:** aproximar-se de um habitante e usar E / Conversar para abrir três temas. A resposta sobre o dia varia com a rotina; cada habitante tem um laço próprio com o jogador e recorda os últimos seis temas/encontros. O laço cresce até três pontos a cada duas horas do jogo; repetir o mesmo tema em menos de 30 minutos do jogo não duplica o registo. A ilha fica suspensa durante o diálogo.
+- **Atividades partilhadas:** numa conversa, combinar uma atividade e usar Go to the meeting place / Ir para o local. O habitante caminha para o encontro. O progresso avança quando ambos estão perto do destino; afastar-se interrompe o progresso sem o apagar. A tarefa dura dez minutos do jogo (cerca de cinco segundos a 1× depois de ambos chegarem).
+- Mira cuida da horta entre 06:00 e 19:00; Theo testa o barco entre 06:00 e 20:00; Luma observa o céu entre 19:00 e 05:00. Uma conclusão por atividade e por dia, quatro pontos de laço, e mudanças persistentes no mapa. Pode existir apenas um plano ativo; expira após três horas do jogo e pode ser cancelado sem penalização.
+- A secção The island we’re growing / A ilha que construímos acompanha flores na horta, testes do barco e mapas do céu. O mundo não avança quando fechado.
 - Pausar e alternar velocidades 1×, 3×, 10×. Um dia completo dura 12 minutos a 1×.
 - Clicar no terreno traça um percurso seguro em redor das casas e do lago, com linha e marcador de destino. WASD/setas ou controlos táteis assumem o movimento manual e cancelam esse percurso.
 - O cais pode ser percorrido até à ponta. Clicar na água ou num edifício cancela o destino. Árvores e mobiliário continuam decorativos nesta alpha.
@@ -45,6 +48,7 @@ npm run build
 - `src/main.tsx`: interface React, modos, controlos móveis, conversas locais e ciclo de gravação.
 - `src/avatar.ts` e `src/CharacterEditor.tsx`: identidade validada, escolhas de aparência e editor com pré-visualização. Gravações antigas recebem um perfil padrão sem reiniciar o mundo.
 - `src/conversations.ts`, `src/socialState.ts` e `src/Conversation.tsx`: diálogos locais EN/PT, temas, memórias recentes, laços com o jogador e registos de diário traduzíveis.
+- `src/activityState.ts`, `src/activities.ts` e `src/SharedActivities.tsx`: planos, horários, progresso por presença, resultados comunitários, cancelamento e persistência.
 - `src/style.css`: interface responsiva.
 
 `DecisionProvider` separa decisões do motor. Um futuro adaptador OpenRouter deverá correr num servidor, com chaves fora do cliente, orçamento e limites explícitos, validação de decisões e fallback local. Este protótipo não contém integração ativa, chaves nem chamadas a modelos. Google Fonts é opcional; existem fontes de sistema de reserva.

@@ -1,10 +1,12 @@
+import {activities,taskForResident,type TaskId} from './activityState';import {activityReason} from './activities';
 import {ChevronRight} from 'lucide-react';
 import{useEffect,useRef,useState}from'react';
 import{profiles,timeLabel,type PersonId,type World}from'./simulation';
 import{bondLabel,greeting,replyText,talk}from'./conversations';
 import{t,type Language}from'./i18n';
 import type{Topic}from'./socialState';
-export function Conversation({world,id,language,onClose,onChange}:{world:World;id:PersonId;language:Language;onClose:()=>void;onChange:()=>void}){
+export function Conversation({world,id,language,onClose,onChange,onActivity}:{world:World;id:PersonId;language:Language;onClose:()=>void;onChange:()=>void;onActivity:(task:TaskId)=>void}){
+ const task=taskForResident[id],offer=activities[task],unavailable=activityReason(world,task);
  const dialog=useRef<HTMLDialogElement>(null),tr=(s:string)=>t(s,language),person=profiles[id];
  const [welcome]=useState(()=>greeting(world,id,language));
  const [answer,setAnswer]=useState<{reply:string;gain:number}|null>(null);
@@ -19,6 +21,7 @@ export function Conversation({world,id,language,onClose,onChange}:{world:World;i
  <div className="bond-heading"><span>{tr('Laço contigo')}</span><strong>{tr(bondLabel(bond.affinity))} · {bond.affinity}/100</strong></div><div className="energy"><i style={{width:`${bond.affinity}%`,background:person.color}}/></div>
  {answer&&<p className="bond-note">{answer.gain>0?tr('Um pequeno laço cresceu.'):tr('A amizade cresce com tempo, não com pressa.')}</p>}
  {bond.memories[0]&&<p className="conversation-memory">{tr('Último encontro')}: {tr('Dia')} {bond.memories[0].day} · {timeLabel(bond.memories[0].minute)} · {tr(topicNames[bond.memories[0].topic])}</p>}
+ <section className="activity-offer"><span className="eyebrow">{tr('UM MOMENTO JUNTOS')}</span><h3>{tr(offer.title)}</h3><p>{tr(offer.description)}</p><button disabled={unavailable!==null} onClick={()=>onActivity(task)}>{tr('Combinar atividade')} <ChevronRight size={14}/></button>{unavailable&&<small>{tr(unavailable)}</small>}</section>
  <div className="editor-actions"><button className="editor-save" onClick={onClose}>{tr('Até já')}</button></div>
  </dialog>;
 }
