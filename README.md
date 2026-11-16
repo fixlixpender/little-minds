@@ -65,3 +65,6 @@ A futura chave `OPENROUTER_API_KEY` deve existir apenas no ambiente do servidor.
 
 ### Character stories
 Each shared activity now follows a three-meeting local story: Mira’s unknown seed, Theo’s little boat and Luma’s lighthouse markings. Complete an activity on three different island days to finish its story; prior activity counts carry forward. Invitations, greetings and journal outcomes reflect progress in EN/PT-PT. Completed journal entries retain their original chapter even as the story advances. Activities remain repeatable after the ending with the existing daily limit and bond reward. Stories are authored locally in `src/stories.ts`; no API calls.
+
+### Expressive islanders
+Map characters now face four directions as they walk, with distinct outfits and role details for Mira, Theo and Luma. Small pixel bubbles show rest, gardening, inventing, stargazing and shared company; the selected islander has a ground ring. The player keeps the saved appearance, including the crest hairstyle. Character motion and cue bobbing stop while the world is paused. Visual state is derived locally and does not change saves or decisions.

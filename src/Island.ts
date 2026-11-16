@@ -1,3 +1,4 @@
+import{actorCue,facingFromMovement,type Facing,type ActorCue}from './actorVisual';
 import {skinTones,hairColours,outfitColours} from './avatar';
 import {isLand,clearSegment,findRoute,followRoute,recoverPosition} from './navigation';
 import {t,type Language} from './i18n';
@@ -5,7 +6,7 @@ import Phaser from 'phaser';import {places,profiles,type World,type PersonId,typ
 export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:Point|null;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
 export const land=isLand;
 export class Island extends Phaser.Scene{
- b:Bridge; mapLabels:{label:Phaser.GameObjects.Text;source:string}[]=[];lastLanguage:Language|null=null; actors:Record<string,Phaser.GameObjects.Container>={};shade!:Phaser.GameObjects.Rectangle; glow!:Phaser.GameObjects.Graphics;water!:Phaser.GameObjects.Graphics; keys!:Record<string,Phaser.Input.Keyboard.Key>; destination:Point|null=null; playerRoute:Point[]=[]; trail!:Phaser.GameObjects.Graphics; communityArt!:Phaser.GameObjects.Graphics; previousMode:Bridge['mode']='observer'; avatarSignature=''; keyboardEnabled=true; routes:Record<string,{target:string;points:Point[]}>={}; constructor(b:Bridge){super('aurora');this.b=b;}
+ b:Bridge; mapLabels:{label:Phaser.GameObjects.Text;source:string}[]=[];lastLanguage:Language|null=null; actors:Record<string,Phaser.GameObjects.Container>={};shade!:Phaser.GameObjects.Rectangle; glow!:Phaser.GameObjects.Graphics;water!:Phaser.GameObjects.Graphics; keys!:Record<string,Phaser.Input.Keyboard.Key>; destination:Point|null=null; playerRoute:Point[]=[]; trail!:Phaser.GameObjects.Graphics; communityArt!:Phaser.GameObjects.Graphics; previousMode:Bridge['mode']='observer'; avatarSignature=''; keyboardEnabled=true; visualTime=0; facings:Record<string,Facing>={}; lastPositions:Record<string,Point>={}; routes:Record<string,{target:string;points:Point[]}>={}; constructor(b:Bridge){super('aurora');this.b=b;}
  create(){this.cameras.main.setBackgroundColor('#284a58');this.water=this.add.graphics();this.drawMap();this.trail=this.add.graphics().setDepth(3);this.communityArt=this.add.graphics().setDepth(4);for(const person of [...this.b.world.residents,this.b.world.player])Object.assign(person,recoverPosition(person));this.glow=this.add.graphics().setDepth(800);for(const r of this.b.world.residents)this.actor(r.id,r.x,r.y,profiles[r.id].color);this.actor('player',this.b.world.player.x,this.b.world.player.y,'#e7d7bd');this.shade=this.add.rectangle(480,300,960,600,0x101b39,1).setDepth(700).setAlpha(0);this.keys=this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E') as typeof this.keys;this.input.keyboard!.on('keydown-E',()=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled)this.b.onInteract()});this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled){const dest={x:p.worldX,y:p.worldY};const route=findRoute(this.b.world.player,dest);if(route.length){this.destination=dest;this.playerRoute=route;}else{this.destination=null;this.playerRoute=[];}}});}
  drawMap(){const c=document.createElement('canvas');c.width=960;c.height=600;const g=c.getContext('2d')!;g.imageSmoothingEnabled=false;let seed=124;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const rect=(x:number,y:number,w:number,h:number,color:string)=>{g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),w,h);};
  for(let y=20;y<580;y+=4)for(let x=20;x<940;x+=4){if(land(x,y)){const coast=!land(x+12,y)||!land(x-12,y)||!land(x,y+12)||!land(x,y-12);rect(x,y,4,4,coast?'#bba77a':['#71875b','#788d5e','#7c915f','#829563'][Math.floor(rand()*4)]);if(rand()<.09&&!coast)rect(x,y,2,2,'#a0aa70');}else if(land(x-12,y)||land(x+12,y)||land(x,y-12)||land(x,y+12))rect(x,y,4,4,'#648581');}
@@ -29,8 +30,8 @@ export class Island extends Phaser.Scene{
  for(let i=0;i<100;i++){const x=240+rand()*450,y=150+rand()*300;if(land(x,y)&&rand()<.5){rect(x,y,2,4,'#4d7347');rect(x-1,y,4,2,rand()>.5?'#e3c689':'#ba96a4');}}
  this.textures.addCanvas('island',c);this.add.image(0,0,'island').setOrigin(0).setDepth(1);
  for(const [text,x,y] of [['FLORESTA',250,132],['HORTA',300,247],['PRAÇA',460,392],['LAGO',664,218],['CAIS',510,587],['FAROL ABANDONADO',815,188]] as [string,number,number][]){const label=this.add.text(x,y,t(text,this.b.language),{fontFamily:'monospace',fontSize:'9px',color:'#e4dfbd',stroke:'#334d40',strokeThickness:3,letterSpacing:2}).setOrigin(.5).setDepth(2).setAlpha(.8);this.mapLabels.push({label,source:text});}}
- actor(id:string,x:number,y:number,color:string){const body=this.add.graphics();body.fillStyle(0x182e2d,.25).fillEllipse(0,5,15,6);body.fillStyle(Phaser.Display.Color.HexStringToColor(color).color).fillRect(-4,-6,8,10);body.fillStyle(0xe7c6a1).fillRect(-4,-13,8,7);body.fillStyle(id==='mira'?0x4e5940:id==='theo'?0x775440:0x5e596d).fillRect(-5,-15,10,4);const label=this.add.text(0,-27,id==='player'?t('Tu',this.b.language):profiles[id as PersonId].name,{fontFamily:'monospace',fontSize:'10px',color:'#fff4cf',backgroundColor:'#263d37cc',padding:{x:4,y:2}}).setOrigin(.5);const actor=this.add.container(x,y,[body,label]).setDepth(y+10);actor.setSize(26,38).setInteractive();actor.on('pointerdown',(_:unknown,__:unknown,___:unknown,event:Phaser.Types.Input.EventData)=>{event.stopPropagation();if(id!=='player')this.b.onSelect(id as PersonId)});const legs=this.add.graphics().setName('legs');actor.add(legs);this.actors[id]=actor;}
- update(tick:number,dt:number){const t=tick;this.updateLanguage();this.updateAvatar();this.drawCommunity(tick);if(this.keyboardEnabled!==this.b.inputEnabled){this.keyboardEnabled=this.b.inputEnabled;this.input.keyboard!.enabled=this.b.inputEnabled;if(this.b.inputEnabled)this.input.keyboard!.enableGlobalCapture();else{this.input.keyboard!.disableGlobalCapture();for(const key of Object.values(this.keys))key.reset();this.destination=null;this.playerRoute=[];}}const seconds=Math.min(dt/1000,.1);this.water.clear();this.water.lineStyle(1,0x8cb1b3,.18);for(let i=0;i<85;i++){const x=(i*137+t*.008)%960,y=(i*67)%600;if(!land(x,y)){this.water.beginPath().moveTo(x,y).lineTo(x+10+Math.sin(i+t*.001)*5,y).strokePath();}}
+ actor(id:string,x:number,y:number,color:string){const body=this.add.graphics();body.fillStyle(0x182e2d,.25).fillEllipse(0,5,15,6);body.fillStyle(Phaser.Display.Color.HexStringToColor(color).color).fillRect(-4,-6,8,10);body.fillStyle(0xe7c6a1).fillRect(-4,-13,8,7);body.fillStyle(id==='mira'?0x4e5940:id==='theo'?0x775440:0x5e596d).fillRect(-5,-15,10,4);const label=this.add.text(0,-35,id==='player'?t('Tu',this.b.language):profiles[id as PersonId].name,{fontFamily:'monospace',fontSize:'10px',color:'#fff4cf',backgroundColor:'#263d37cc',padding:{x:4,y:2}}).setOrigin(.5);const actor=this.add.container(x,y,[body,label]).setDepth(y+10);actor.setSize(26,38).setInteractive();actor.on('pointerdown',(_:unknown,__:unknown,___:unknown,event:Phaser.Types.Input.EventData)=>{event.stopPropagation();if(id!=='player')this.b.onSelect(id as PersonId)});const legs=this.add.graphics().setName('legs'),cue=this.add.graphics().setName('cue');actor.add([legs,cue]);this.actors[id]=actor;this.facings[id]='front';this.lastPositions[id]={x,y};}
+ update(tick:number,dt:number){if(!this.b.paused)this.visualTime+=Math.min(dt,100);const t=this.visualTime;this.updateLanguage();this.updateAvatar();this.drawCommunity(tick);if(this.keyboardEnabled!==this.b.inputEnabled){this.keyboardEnabled=this.b.inputEnabled;this.input.keyboard!.enabled=this.b.inputEnabled;if(this.b.inputEnabled)this.input.keyboard!.enableGlobalCapture();else{this.input.keyboard!.disableGlobalCapture();for(const key of Object.values(this.keys))key.reset();this.destination=null;this.playerRoute=[];}}const seconds=Math.min(dt/1000,.1);this.water.clear();this.water.lineStyle(1,0x8cb1b3,.18);for(let i=0;i<85;i++){const x=(i*137+t*.008)%960,y=(i*67)%600;if(!land(x,y)){this.water.beginPath().moveTo(x,y).lineTo(x+10+Math.sin(i+t*.001)*5,y).strokePath();}}
  for(const r of this.b.world.residents){
  if(!this.routes[r.id]||this.routes[r.id].target!==r.target)this.routes[r.id]={target:r.target,points:findRoute(r,places[r.target])};
  const moving=!this.b.paused&&followRoute(r,this.routes[r.id].points,seconds*15*Math.sqrt(this.b.speed));
@@ -61,7 +62,7 @@ export class Island extends Phaser.Scene{
  this.trail.fillStyle(0xffebbb,.7).fillRect(this.destination.x-1,this.destination.y-1,2,2);
  }
  this.animateActor('player',p,moving,t);
- }
+ }else this.animateActor('player',p,false,t);
  const h=this.b.world.minute/60,night=h<5||h>21?.56:h<7?.56*(7-h)/2:h>17?.56*(h-17)/4:0;this.shade.setAlpha(night);this.glow.clear();if(night>0){for(const [x,y]of [[386,299],[533,332],[565,201],[356,415],[285,379],[335,379],[540,371],[590,371],[568,152],[618,152],[819,88]])for(let radius=22;radius>0;radius-=3)this.glow.fillStyle(0xffd38a,.009*night/.56).fillCircle(x,y,radius);for(let i=0;i<20;i++){const x=230+i*23,y=230+Math.sin(i*9+t*.0003)*90;this.glow.fillStyle(0xe6edab,.4+.3*Math.sin(t*.003+i)).fillRect(x,y,2,2);}}
  }
  updateLanguage(){if(this.lastLanguage===this.b.language)return;this.lastLanguage=this.b.language;for(const item of this.mapLabels)item.label.setText(t(item.source,this.b.language));const label=this.actors.player?.list[1] as Phaser.GameObjects.Text|undefined;label?.setText(this.b.world.playerProfile.name||t('Tu',this.b.language));}
@@ -87,9 +88,46 @@ export class Island extends Phaser.Scene{
  }
  animateActor(id:string,position:Point,moving:boolean,time:number){
  const actor=this.actors[id],phase=moving?Math.sin(time*.016):0;
+ const facing=this.facings[id]=facingFromMovement(this.lastPositions[id],position,this.facings[id]);this.lastPositions[id]={...position};
  actor.setPosition(Math.round(position.x),Math.round(position.y)).setDepth(position.y+10);
  const body=actor.list[0] as Phaser.GameObjects.Graphics;body.y=moving?-Math.abs(phase):0;
+ this.drawPerson(body,id,facing,phase);
  const legs=actor.getByName('legs') as Phaser.GameObjects.Graphics;
  legs.clear().fillStyle(0x354243).fillRect(-4,4+phase*2,3,4).fillRect(1,4-phase*2,3,4);
+ const cue=actor.getByName('cue') as Phaser.GameObjects.Graphics;cue.clear();
+ if(id!=='player')this.drawCue(cue,actorCue(this.b.world,id as PersonId,this.b.mode==='inhabitant'),time);
+ }
+ drawPerson(g:Phaser.GameObjects.Graphics,id:string,facing:Facing,phase:number){
+ const colour=(hex:string)=>Phaser.Display.Color.HexStringToColor(hex).color;
+ const p=this.b.world.playerProfile,isPlayer=id==='player',back=facing==='back',side=facing==='left'||facing==='right',sign=facing==='left'?-1:1;
+ const skin=isPlayer?colour(skinTones[p.skin]):id==='theo'?0xd7ad83:id==='luma'?0xc5987b:0xe7c6a1;
+ const hair=isPlayer?colour(hairColours[p.hair]):id==='mira'?0x4e5940:id==='theo'?0x775440:0x5e596d;
+ const outfit=isPlayer?colour(outfitColours[p.outfit]):colour(profiles[id as PersonId].color);
+ g.clear().fillStyle(0x182e2d,.25).fillEllipse(0,7,17,6);
+ if(this.b.selected===id)g.lineStyle(1,0xe7dba6,.8).strokeEllipse(0,7,22,9);
+ g.fillStyle(outfit).fillRect(side?-3:-5,-7,side?7:10,12);
+ g.fillStyle(0x172f2b,.14).fillRect(side?-3:-5,-7,2,12);
+ // Sleeves and hands swing in opposite directions to the steps.
+ g.fillStyle(outfit).fillRect(-7,-6+phase,2,6).fillRect(5,-6-phase,2,6);
+ g.fillStyle(skin).fillRect(-7,phase,2,3).fillRect(5,-phase,2,3);
+ g.fillStyle(skin).fillRect(-5,-17,10,10);
+ g.fillStyle(hair).fillRect(-6,-20,12,5).fillRect(back?-5:-6,-15,back?10:2,back?8:4);
+ const longHair=isPlayer?p.style==='long':id==='luma';
+ if(longHair)g.fillStyle(hair).fillRect(-6,-15,2,13).fillRect(4,-15,2,13);
+ if(isPlayer&&p.style==='crest')g.fillStyle(hair).fillRect(-2,-24,4,6);
+ if(id==='theo')g.fillStyle(hair).fillRect(-4,-22,4,3).fillRect(2,-21,3,2);
+ if(!back){g.fillStyle(0x283b38);if(side)g.fillRect(sign<0?-4:2,-13,2,2);else g.fillRect(-3,-13,2,2).fillRect(2,-13,2,2);g.fillStyle(0xac7c66).fillRect(side?(sign<0?-5:3):-1,-9,2,1);}
+ if(id==='mira'){g.fillStyle(0xebe0b1).fillRect(-3,-5,6,9);g.fillStyle(0x6e8860).fillRect(-2,-1,4,3);if(!back)g.fillStyle(0xe4c684).fillRect(4,-18,3,3);}
+ if(id==='theo'){g.fillStyle(0x6a6554).fillRect(-5,2,10,2);g.fillStyle(0xc0c5ac).fillRect(side?2:3,-3,2,6);if(!back)g.fillStyle(0xd0bb7e).fillRect(-5,-16,10,2);}
+ if(id==='luma'){g.fillStyle(0x77718e).fillRect(-6,-7,12,4);g.fillStyle(0xe4d8a5).fillRect(3,-6,2,2);g.fillStyle(0x747181).fillRect(back?-3:2,-1,4,5);}
+ }
+ drawCue(g:Phaser.GameObjects.Graphics,cue:ActorCue,time:number){
+ if(!cue)return;const x=13,y=-25+Math.round(Math.sin(time*.002));
+ g.fillStyle(0x203932,.94).fillRoundedRect(x-5,y-5,13,12,3).fillTriangle(x-4,y+5,x-1,y+5,x-4,y+8);
+ if(cue==='rest'){g.lineStyle(1,0xc1c8e0).beginPath().moveTo(x-1,y-2).lineTo(x+4,y-2).lineTo(x-1,y+3).lineTo(x+4,y+3).strokePath();}
+ if(cue==='company'){g.fillStyle(0xe2b7a6).fillRect(x-2,y-1,3,3).fillRect(x+2,y-1,3,3).fillTriangle(x-2,y+1,x+5,y+1,x+1.5,y+5);}
+ if(cue==='garden'){g.fillStyle(0xb3ce8b).fillEllipse(x+1,y,7,4);g.lineStyle(1,0x7c9d62).lineBetween(x-1,y+3,x+4,y-2);}
+ if(cue==='invent'){g.lineStyle(1,0xe4c580).strokeCircle(x+1,y+1,3).lineBetween(x+1,y-4,x+1,y-2).lineBetween(x+1,y+4,x+1,y+6).lineBetween(x-4,y+1,x-2,y+1).lineBetween(x+4,y+1,x+6,y+1);}
+ if(cue==='stars'){g.fillStyle(0xd8d5ef).fillRect(x,y-3,2,8).fillRect(x-3,y,8,2);}
  }
 }
