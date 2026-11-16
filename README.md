@@ -62,3 +62,6 @@ Mapa exterior fixo e visto por inteiro; sem interiores, inventário ou missões.
 O repositório é público. Nunca colocar chaves no código, em ficheiros versionados ou em variáveis `VITE_*`: essas variáveis são incorporadas no JavaScript público.
 
 A futura chave `OPENROUTER_API_KEY` deve existir apenas no ambiente do servidor. O cliente chamará um endpoint próprio, com autenticação, limites de pedidos e orçamento. `.env` e variantes estão excluídos pelo `.gitignore`; este projeto ainda não faz chamadas a APIs pagas.
+
+### Character stories
+Each shared activity now follows a three-meeting local story: Mira’s unknown seed, Theo’s little boat and Luma’s lighthouse markings. Complete an activity on three different island days to finish its story; prior activity counts carry forward. Invitations, greetings and journal outcomes reflect progress in EN/PT-PT. Completed journal entries retain their original chapter even as the story advances. Activities remain repeatable after the ending with the existing daily limit and bond reward. Stories are authored locally in `src/stories.ts`; no API calls.

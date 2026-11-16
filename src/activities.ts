@@ -1,3 +1,4 @@
+import{storyText,storyOutcome}from './stories';
 import{activities,taskForResident,type TaskId,type ActivityPhase}from './activityState';
 import{localDecisions,log,places,profiles,type World}from './simulation';
 import{t,type Language}from './i18n';
@@ -8,7 +9,8 @@ export function activityReason(world:World,task:TaskId):string|null{
  if(a.from<a.until?(h<a.from||h>=a.until):(h<a.from&&h>=a.until))return task==='stars'?'Podem observar o céu entre as 19:00 e as 05:00.':'Esta atividade está disponível durante o dia.';
  return null;
 }
-export function activityEventText(task:TaskId,phase:ActivityPhase,language:Language):string{
+export function activityEventText(task:TaskId,phase:ActivityPhase,language:Language,chapter?:number):string{
+ if(phase==='completed'&&chapter){const outcome=storyOutcome(task,chapter,language);if(outcome)return outcome;}
  const a=activities[task],name=profiles[a.resident].name,title=t(a.title,language).toLowerCase();
  const messages:Record<ActivityPhase,[string,string]>={
  started:[`Combinaste ${title} com ${name}.`,`You arranged to ${title} with ${name}.`],
@@ -18,7 +20,7 @@ export function activityEventText(task:TaskId,phase:ActivityPhase,language:Langu
  };
  return messages[phase][language==='en'?1:0];
 }
-function record(world:World,task:TaskId,phase:ActivityPhase){log(world,activityEventText(task,phase,'pt-PT'),activities[task].resident,'discovery');world.events[0].shared={task,phase};}
+function record(world:World,task:TaskId,phase:ActivityPhase){const chapter=phase==='completed'&&world.community[task]<=3?world.community[task]:undefined;log(world,activityEventText(task,phase,'pt-PT',chapter),activities[task].resident,'discovery');world.events[0].shared={task,phase,...(chapter?{chapter}:{})};}
 function release(world:World,task:TaskId){const resident=world.residents.find(r=>r.id===activities[task].resident)!;Object.assign(resident,localDecisions.decide(resident,world));}
 export function startActivity(world:World,task:TaskId):boolean{
  if(activityReason(world,task))return false;
@@ -52,6 +54,5 @@ export function tickActivity(world:World,minutes:number):boolean{
 }
 export function activityMemory(world:World,resident:keyof typeof taskForResident,language:Language):string|null{
  const task=taskForResident[resident];if(world.community[task]===0)return null;
- const memories:Record<TaskId,[string,string]>={garden:['Gostei de cuidar das sementes contigo. Já viste as flores novas?','I enjoyed tending the seedlings with you. Have you seen the new flowers?'],boat:['Ainda estou a pensar no nosso teste do barco. Afinal, flutua mesmo!','I’m still thinking about our boat test. It really does float!'],stars:['Guardei no caderno a constelação que desenhámos. O céu sabe melhor com companhia.','I kept our constellation in my notebook. The sky is better with company.']};
- return memories[task][language==='en'?1:0];
+ return storyText(task,world.community[task],language).memory;
 }

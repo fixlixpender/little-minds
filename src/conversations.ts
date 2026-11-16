@@ -50,7 +50,7 @@ export function talk(world:World,id:PersonId,topic:Topic):{reply:string;gain:num
  return{reply,gain,recorded:true};
 }
 export function eventText(entry:Entry,language:Language):string{
- if(entry.shared&&Object.hasOwn(activities,entry.shared.task)&&['started','completed','cancelled','expired'].includes(entry.shared.phase))return activityEventText(entry.shared.task,entry.shared.phase,language);
+ if(entry.shared&&Object.hasOwn(activities,entry.shared.task)&&['started','completed','cancelled','expired'].includes(entry.shared.phase))return activityEventText(entry.shared.task,entry.shared.phase,language,entry.shared.chapter);
  const record=entry.conversation;
  if(record&&entry.person&&profiles[entry.person]&&replies[record.reply])return language==='en'?`You talked to ${profiles[entry.person].name}: “${replyText(record.reply,language)}”`:`Conversaste com ${profiles[entry.person].name}: “${replyText(record.reply,language)}”`;
  return t(entry.text,language);
