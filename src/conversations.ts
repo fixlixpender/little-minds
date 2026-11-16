@@ -1,3 +1,4 @@
+import{weatherAt}from './weather';
 import {activities} from './activityState';
 import {activityEventText,activityMemory} from './activities';
 import{log,profiles,type Entry,type PersonId,type World}from './simulation';
@@ -6,6 +7,12 @@ import type{Topic}from './socialState';
 type Line={en:string;'pt-PT':string};
 const line=(en:string,pt:string):Line=>({en,'pt-PT':pt});
 export const replies:Record<string,Line>={
+ 'mira.rain':line('The rain is doing the watering for me. I still check the seedlings. Quietly, of course.','A chuva está a tratar da rega por mim. Ainda vou espreitar as sementes. Com cuidado, claro.'),
+ 'theo.rain':line('Excellent weather for testing waterproof inventions. Less excellent for my notebook.','Um tempo excelente para testar invenções à prova de água. Menos excelente para o meu caderno.'),
+ 'luma.rain':line('We can’t see the stars now, but they haven’t gone anywhere. The sky should clear this evening.','Agora não vemos as estrelas, mas elas não foram a lado nenhum. O céu deve abrir ao fim da tarde.'),
+ 'mira.mist':line('The leaves collect tiny drops in this mist. You have to get close to notice.','As folhas juntam gotinhas nesta neblina. É preciso chegar perto para reparar.'),
+ 'theo.mist':line('I could build a foghorn. Mira has already asked me to build a quiet one.','Podia construir uma buzina de nevoeiro. A Mira já me pediu que fosse silenciosa.'),
+ 'luma.mist':line('The lighthouse disappears in the mist, but I know where it is. Some things stay with us without being seen.','O farol desaparece na neblina, mas sei onde está. Há coisas que ficam connosco mesmo sem as vermos.'),
  'mira.garden':line('The seedlings are finally growing. I keep checking, even though I know they need time.','As sementes estão finalmente a germinar. Estou sempre a espreitar, mesmo sabendo que precisam de tempo.'),
  'mira.forest':line('I found a seed I don’t recognise. I’ll plant just one first. Better to be careful.','Encontrei uma semente que não reconheço. Vou plantar só uma primeiro. Convém ter cuidado.'),
  'mira.lake':line('There’s a tiny plant by the lake that closes when the shade reaches it. I want to understand why.','Há uma plantinha junto ao lago que se fecha quando a sombra lhe chega. Quero perceber porquê.'),
@@ -31,6 +38,7 @@ export function chooseReply(world:World,id:PersonId,topic:Topic):string{
  if(topic!=='day')return `${id}.${topic}`;
  const resident=world.residents.find(r=>r.id===id)!;
  if(resident.activity==='A descansar em casa')return `${id}.rest`;
+ const weather=weatherAt(world.day,world.minute);if(weather!=='clear')return `${id}.${weather}`;
  if(id==='mira')return resident.target==='floresta'?'mira.forest':resident.target==='lago'?'mira.lake':'mira.garden';
  if(id==='theo')return resident.target==='cais'?'theo.pier':resident.target==='praca'?'theo.square':'theo.work';
  return resident.activity==='A observar as estrelas'?'luma.stars':resident.target==='farol'?'luma.lighthouse':resident.target==='floresta'?'luma.forest':'luma.lake';

@@ -68,3 +68,6 @@ Each shared activity now follows a three-meeting local story: Mira’s unknown s
 
 ### Expressive islanders
 Map characters now face four directions as they walk, with distinct outfits and role details for Mira, Theo and Luma. Small pixel bubbles show rest, gardening, inventing, stargazing and shared company; the selected islander has a ground ring. The player keeps the saved appearance, including the crest hairstyle. Character motion and cue bobbing stop while the world is paused. Visual state is derived locally and does not change saves or decisions.
+
+### Coastal weather
+A local, repeatable four-day cycle alternates clear skies, daytime rain (09:00–17:00 on day 2) and morning mist (05:00–11:00 on day 3). The cycle repeats from day 5. Effects fade over 30 island minutes, pause with the world and stay static when reduced motion is requested. Nights remain clear for stargazing. Ask islanders about their day for individual weather comments in EN/PT-PT. Weather derives from the saved day and time, so existing saves require no migration or weather API.

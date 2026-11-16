@@ -6,6 +6,7 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+ 'Chuva costeira':'Coastal rain','Neblina da manhã':'Morning mist',
  'encontros':'meetings','História concluída':'Story complete','História em curso':'Story in progress','Próximo encontro':'Next meeting','Podem continuar a partilhar esta atividade.':'You can keep sharing this activity.','Cada encontro concluído num novo dia faz a história avançar.':'Each completed meeting on a new day advances the story.',
   'UM MOMENTO JUNTOS':'A MOMENT TOGETHER','Cuidar da horta':'Tend the garden','Testar o pequeno barco':'Test the little boat','Desenhar uma constelação':'Sketch a constellation',
   'Rega as sementes com a Mira. Fiquem juntos junto aos canteiros durante alguns instantes.':'Water the seedlings with Mira. Spend a few moments together beside the garden beds.',
