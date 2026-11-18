@@ -8,8 +8,8 @@ import Phaser from 'phaser';import {places,profiles,type World,type PersonId,typ
 export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;showResidentRoute:boolean;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:Point|null;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
 export const land=isLand;
 export class Island extends Phaser.Scene{
- b:Bridge; mapLabels:{label:Phaser.GameObjects.Text;source:string}[]=[];lastLanguage:Language|null=null; actors:Record<string,Phaser.GameObjects.Container>={};shade!:Phaser.GameObjects.Rectangle; glow!:Phaser.GameObjects.Graphics;water!:Phaser.GameObjects.Graphics; keys!:Record<string,Phaser.Input.Keyboard.Key>; destination:Point|null=null; playerRoute:Point[]=[]; trail!:Phaser.GameObjects.Graphics; communityArt!:Phaser.GameObjects.Graphics; previousMode:Bridge['mode']='observer'; avatarSignature=''; keyboardEnabled=true; visualTime=0; atmosphere!:Phaser.GameObjects.Graphics; reduceMotion=false; facings:Record<string,Facing>={}; lastPositions:Record<string,Point>={}; routes:Record<string,{target:string;points:Point[]}>={}; constructor(b:Bridge){super('aurora');this.b=b;}
- create(){this.reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;this.atmosphere=this.add.graphics().setDepth(750);this.cameras.main.setBackgroundColor('#284a58');this.water=this.add.graphics();this.drawMap();this.trail=this.add.graphics().setDepth(3);this.communityArt=this.add.graphics().setDepth(4);for(const person of [...this.b.world.residents,this.b.world.player])Object.assign(person,recoverPosition(person));this.glow=this.add.graphics().setDepth(800);for(const r of this.b.world.residents)this.actor(r.id,r.x,r.y,profiles[r.id].color);this.actor('player',this.b.world.player.x,this.b.world.player.y,'#e7d7bd');this.shade=this.add.rectangle(480,300,960,600,0x101b39,1).setDepth(700).setAlpha(0);this.keys=this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E') as typeof this.keys;this.input.keyboard!.on('keydown-E',()=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled)this.b.onInteract()});this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled){const dest={x:p.worldX,y:p.worldY};const route=findRoute(this.b.world.player,dest);if(route.length){this.destination=dest;this.playerRoute=route;}else{this.destination=null;this.playerRoute=[];}}});}
+ b:Bridge; mapLabels:{label:Phaser.GameObjects.Text;source:string}[]=[];lastLanguage:Language|null=null; actors:Record<string,Phaser.GameObjects.Container>={};shade!:Phaser.GameObjects.Rectangle; glow!:Phaser.GameObjects.Graphics;water!:Phaser.GameObjects.Graphics; keys!:Record<string,Phaser.Input.Keyboard.Key>; destination:Point|null=null; playerRoute:Point[]=[]; trail!:Phaser.GameObjects.Graphics; residentTrail!:Phaser.GameObjects.Graphics; communityArt!:Phaser.GameObjects.Graphics; previousMode:Bridge['mode']='observer'; avatarSignature=''; keyboardEnabled=true; visualTime=0; atmosphere!:Phaser.GameObjects.Graphics; reduceMotion=false; facings:Record<string,Facing>={}; lastPositions:Record<string,Point>={}; routes:Record<string,{target:string;points:Point[]}>={}; constructor(b:Bridge){super('aurora');this.b=b;}
+ create(){this.reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;this.atmosphere=this.add.graphics().setDepth(750);this.cameras.main.setBackgroundColor('#284a58');this.water=this.add.graphics();this.drawMap();this.trail=this.add.graphics().setDepth(3);this.residentTrail=this.add.graphics().setDepth(760);this.communityArt=this.add.graphics().setDepth(4);for(const person of [...this.b.world.residents,this.b.world.player])Object.assign(person,recoverPosition(person));this.glow=this.add.graphics().setDepth(800);for(const r of this.b.world.residents)this.actor(r.id,r.x,r.y,profiles[r.id].color);this.actor('player',this.b.world.player.x,this.b.world.player.y,'#e7d7bd');this.shade=this.add.rectangle(480,300,960,600,0x101b39,1).setDepth(700).setAlpha(0);this.keys=this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E') as typeof this.keys;this.input.keyboard!.on('keydown-E',()=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled)this.b.onInteract()});this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled){const dest={x:p.worldX,y:p.worldY};const route=findRoute(this.b.world.player,dest);if(route.length){this.destination=dest;this.playerRoute=route;}else{this.destination=null;this.playerRoute=[];}}});}
  drawMap(){const c=document.createElement('canvas');c.width=960;c.height=600;const g=c.getContext('2d')!;g.imageSmoothingEnabled=false;let seed=124;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const rect=(x:number,y:number,w:number,h:number,color:string)=>{g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),w,h);};
  for(let y=20;y<580;y+=4)for(let x=20;x<940;x+=4){if(land(x,y)){const coast=!land(x+12,y)||!land(x-12,y)||!land(x,y+12)||!land(x,y-12);rect(x,y,4,4,coast?'#bba77a':['#71875b','#788d5e','#7c915f','#829563'][Math.floor(rand()*4)]);if(rand()<.09&&!coast)rect(x,y,2,2,'#a0aa70');}else if(land(x-12,y)||land(x+12,y)||land(x,y-12)||land(x,y+12))rect(x,y,4,4,'#648581');}
  const path=(a:Point,b:Point,width=16)=>{g.strokeStyle='#b5aa83';g.lineWidth=width;g.lineCap='round';g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();};for(const p of Object.values(places))path(places.praca,p);for(let i=0;i<1100;i++){const x=180+rand()*620,y=120+rand()*380;if(land(x,y)&&rand()<.15)rect(x,y,2,2,'#bac08a');}
@@ -42,6 +42,7 @@ export class Island extends Phaser.Scene{
  }
  const p=this.b.world.player,a=this.actors.player;a.setVisible(this.b.mode==='inhabitant');
  this.trail.clear();
+ this.residentTrail.clear();
  if(this.b.mode==='observer'&&this.b.showResidentRoute)this.drawResidentRoute();
 
  if(this.b.mode!==this.previousMode){this.destination=null;this.playerRoute=[];this.previousMode=this.b.mode;}
@@ -74,16 +75,22 @@ export class Island extends Phaser.Scene{
   if(!selected)return;
   const resident=this.b.world.residents.find(person=>person.id===selected);
   const points=this.routes[selected]?.points;
-  if(!resident||!points?.length)return;
+  if(!resident)return;
 
+  const trail=this.residentTrail;
   const color=Phaser.Display.Color.HexStringToColor(profiles[selected].color).color;
+  if(!points?.length){
+   trail.lineStyle(4,0x172925).strokeEllipse(resident.x,resident.y+7,25,12);
+   trail.lineStyle(2,color).strokeEllipse(resident.x,resident.y+7,25,12);
+   return;
+  }
+
   const destination=points[points.length-1];
-  this.trail.lineStyle(2,0x213b34,.8).beginPath().moveTo(resident.x,resident.y);
-  for(const point of points)this.trail.lineTo(point.x,point.y);
-  this.trail.strokePath();
-  this.trail.lineStyle(1,color,.95).beginPath().moveTo(resident.x,resident.y);
-  for(const point of points)this.trail.lineTo(point.x,point.y);
-  this.trail.strokePath().strokeCircle(destination.x,destination.y,5);
+  for(const [width,stroke] of [[5,0x172925],[2,color]]){
+   trail.lineStyle(width,stroke).beginPath().moveTo(resident.x,resident.y+7);
+   for(const point of points)trail.lineTo(point.x,point.y);
+   trail.strokePath().strokeCircle(destination.x,destination.y,7);
+  }
  }
  updateLanguage(){if(this.lastLanguage===this.b.language)return;this.lastLanguage=this.b.language;for(const item of this.mapLabels)item.label.setText(t(item.source,this.b.language));const label=this.actors.player?.list[1] as Phaser.GameObjects.Text|undefined;label?.setText(this.b.world.playerProfile.name||t('Tu',this.b.language));}
  drawCommunity(time:number){

@@ -47,7 +47,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   <span className="map-tracking-activity">{tr(r.activity)}</span>
   <button className="resident-route-toggle" type="button" aria-pressed={showResidentRoute}
    onClick={()=>setShowResidentRoute(value=>!value)}>
-   <Footprints size={14} aria-hidden="true"/>{tr('Mostrar percurso')}
+   <Footprints size={14} aria-hidden="true"/>{tr(showResidentRoute?'Ocultar percurso':'Mostrar percurso')}
   </button>
  </div>}
  <div className="map-footer"><span><span className="live-dot"/>{tr(paused?'Simulação em pausa':'O mundo segue o seu ritmo')}</span><span>{tr(mode==='observer'?'Seleciona um habitante para o conhecer':'WASD / setas · E conversar · toca para caminhar')}</span></div>
