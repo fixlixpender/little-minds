@@ -30,3 +30,5 @@
  border:1px solid #b7cb9855;border-radius:4px;color:#dce7cc}
 .resident-route-toggle[aria-pressed=true]{background:#b7cb98;color:#203331}
 .resident-route-toggle:focus-visible{outline:2px solid #e9ead4;outline-offset:2px}
+
+.map-walk .language-select{max-width:100%;min-height:32px}

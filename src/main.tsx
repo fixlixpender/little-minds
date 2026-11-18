@@ -8,7 +8,10 @@ const placeLabels: Record<Place,string> = {
  praca:'Praça', horta:'Horta comunitária', floresta:'Floresta', lago:'Lago',
  cais:'Cais', farol:'Farol', mira:'Casa da Mira', theo:'Oficina do Theo', luma:'Casa da Luma',
 };
-function App(){const[language,setLanguage]=useState<Language>(()=>{try{return readLanguage(localStorage)}catch{return 'en'}});const tr=(text:string)=>t(text,language);const[initialWorld]=useState(()=>{try{return restore(localStorage.getItem(SAVE_KEY))}catch{return restore(null)}});const world=useRef(initialWorld);const[,render]=useState(0);const[mode,setMode]=useState<'observer'|'inhabitant'>('observer');const[selected,select]=useState<PersonId|null>('mira');const[paused,pause]=useState(false);const[showResidentRoute,setShowResidentRoute]=useState(false);const[wideMap,setWideMap]=useState(()=>{try{return localStorage.getItem('little-minds:expanded-map')==='true'}catch{return false}});const[speed,speedSet]=useState(1);const[tab,setTab]=useState('life');const[saved,setSaved]=useState(true);const[sound,setSound]=useState(false);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const audio=useRef<AudioContext|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
+const walkingDestinations = ['praca','horta','floresta','lago','cais','farol'] as const satisfies readonly Place[];
+type WalkingDestination = (typeof walkingDestinations)[number];
+
+function App(){const[language,setLanguage]=useState<Language>(()=>{try{return readLanguage(localStorage)}catch{return 'en'}});const tr=(text:string)=>t(text,language);const[initialWorld]=useState(()=>{try{return restore(localStorage.getItem(SAVE_KEY))}catch{return restore(null)}});const world=useRef(initialWorld);const[,render]=useState(0);const[mode,setMode]=useState<'observer'|'inhabitant'>('observer');const[selected,select]=useState<PersonId|null>('mira');const[paused,pause]=useState(false);const[walkingDestination,setWalkingDestination]=useState<WalkingDestination>("praca");const[showResidentRoute,setShowResidentRoute]=useState(false);const[wideMap,setWideMap]=useState(()=>{try{return localStorage.getItem('little-minds:expanded-map')==='true'}catch{return false}});const[speed,speedSet]=useState(1);const[tab,setTab]=useState('life');const[saved,setSaved]=useState(true);const[sound,setSound]=useState(false);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const audio=useRef<AudioContext|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
  function persist(){try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}}
  function interact(target?:PersonId){if(editorOpen||conversation)return;const w=world.current;const nearest=target?w.residents.find(r=>r.id===target)!:[...w.residents].sort((a,b)=>Math.hypot(a.x-w.player.x,a.y-w.player.y)-Math.hypot(b.x-w.player.x,b.y-w.player.y))[0];if(Math.hypot(nearest.x-w.player.x,nearest.y-w.player.y)>70){setNotice('Aproxima-te de um habitante para conversar.');return;}select(nearest.id);setNotice('');bridge.current.direction={x:0,y:0};setConversation(nearest.id);}
  Object.assign(bridge.current,{mode,selected,showResidentRoute,paused:paused||editorOpen||conversation!==null,speed,language,inputEnabled:!editorOpen&&!conversation,onInteract:()=>interact()});
@@ -51,6 +54,23 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   </button>
  </div>}
  <div className="map-footer"><span><span className="live-dot"/>{tr(paused?'Simulação em pausa':'O mundo segue o seu ritmo')}</span><span>{tr(mode==='observer'?'Seleciona um habitante para o conhecer':'WASD / setas · E conversar · toca para caminhar')}</span></div>
+ {mode==='inhabitant'&&<form className="map-tracking map-walk" onSubmit={event=>{
+  event.preventDefault();
+  if(bridge.current.inputEnabled){
+   bridge.current.navigationRequest=places[walkingDestination];
+  }
+ }}>
+  <label htmlFor="walking-destination">{tr('Destino a pé')}</label>
+  <select id="walking-destination" className="language-select" value={walkingDestination}
+   onKeyDown={event=>event.stopPropagation()}
+   onChange={event=>{
+    const destination=walkingDestinations.find(place=>place===event.currentTarget.value);
+    if(destination)setWalkingDestination(destination);
+   }}>
+   {walkingDestinations.map(place=><option key={place} value={place}>{tr(placeLabels[place])}</option>)}
+  </select>
+  <button className="resident-route-toggle" type="submit"><Footprints size={14} aria-hidden="true"/>{tr('Caminhar até lá')}</button>
+ </form>}
  <ActivityPanel world={w} language={language} onGo={()=>{if(w.sharedActivity){setMode('inhabitant');bridge.current.navigationRequest={...places[activities[w.sharedActivity.task].place]};}}} onCancel={()=>{cancelActivity(w);persist();render(n=>n+1)}}/>
  <div className="residents-heading"><h2>{tr('Os habitantes')}</h2><span>{tr('3 vidas a cruzarem-se')}</span></div><div className="resident-grid">{(Object.keys(profiles)as PersonId[]).map(id=>{const p=profiles[id],resident=w.residents.find(r=>r.id===id)!;return <button className={`resident-card ${selected===id?'selected':''}`} key={id} onClick={()=>select(id)}><span className={`portrait ${id}`}><span className="pixel-person"/></span><span className="resident-info"><strong>{p.name}<span className="status-dot"/></strong><small>{tr(p.role)}</small><span className="activity">{tr(resident.activity)}</span></span><ChevronRight size={15}/></button>})}</div>
  {mode==='inhabitant'&&<section className="shared-activity">
