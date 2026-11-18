@@ -25,3 +25,8 @@
 .map-tracking-text{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
 .map-tracking-text strong{color:#e9ead4;font-weight:600}
 .map-tracking-activity{margin-inline-start:auto;color:#b3c4ac}
+
+.resident-route-toggle{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:5px 9px;
+ border:1px solid #b7cb9855;border-radius:4px;color:#dce7cc}
+.resident-route-toggle[aria-pressed=true]{background:#b7cb98;color:#203331}
+.resident-route-toggle:focus-visible{outline:2px solid #e9ead4;outline-offset:2px}
