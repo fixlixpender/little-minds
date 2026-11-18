@@ -5,7 +5,7 @@ import {skinTones,hairColours,outfitColours} from './avatar';
 import {isLand,clearSegment,findRoute,followRoute,recoverPosition} from './navigation';
 import {t,type Language} from './i18n';
 import Phaser from 'phaser';import {places,profiles,type World,type PersonId,type Point} from './simulation';
-export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;showResidentRoute:boolean;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:Point|null;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
+export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;showResidentRoute:boolean;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:Point|null; cancelNavigation:boolean; walkingAutomatically:boolean;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
 export const land=isLand;
 export class Island extends Phaser.Scene{
  b:Bridge; mapLabels:{label:Phaser.GameObjects.Text;source:string}[]=[];lastLanguage:Language|null=null; actors:Record<string,Phaser.GameObjects.Container>={};shade!:Phaser.GameObjects.Rectangle; glow!:Phaser.GameObjects.Graphics;water!:Phaser.GameObjects.Graphics; keys!:Record<string,Phaser.Input.Keyboard.Key>; destination:Point|null=null; playerRoute:Point[]=[]; trail!:Phaser.GameObjects.Graphics; residentTrail!:Phaser.GameObjects.Graphics; communityArt!:Phaser.GameObjects.Graphics; previousMode:Bridge['mode']='observer'; avatarSignature=''; keyboardEnabled=true; visualTime=0; atmosphere!:Phaser.GameObjects.Graphics; reduceMotion=false; facings:Record<string,Facing>={}; lastPositions:Record<string,Point>={}; routes:Record<string,{target:string;points:Point[]}>={}; constructor(b:Bridge){super('aurora');this.b=b;}
@@ -46,6 +46,12 @@ export class Island extends Phaser.Scene{
  if(this.b.mode==='observer'&&this.b.showResidentRoute)this.drawResidentRoute();
 
  if(this.b.mode!==this.previousMode){this.destination=null;this.playerRoute=[];this.previousMode=this.b.mode;}
+ if(this.b.cancelNavigation){
+  this.b.cancelNavigation=false;
+  this.b.navigationRequest=null;
+  this.destination=null;
+  this.playerRoute=[];
+ }
  if(this.b.mode==='inhabitant'&&this.b.inputEnabled){
  if(this.b.navigationRequest){const destination=this.b.navigationRequest;this.b.navigationRequest=null;this.playerRoute=findRoute(p,destination);this.destination=this.playerRoute.length?destination:null;}
  const dx=Number(this.keys.D.isDown||this.keys.RIGHT.isDown)-Number(this.keys.A.isDown||this.keys.LEFT.isDown)+this.b.direction.x;
@@ -68,6 +74,7 @@ export class Island extends Phaser.Scene{
  }
  this.animateActor('player',p,moving,t);
  }else this.animateActor('player',p,false,t);
+ this.b.walkingAutomatically=this.b.mode==='inhabitant'&&this.playerRoute.length>0;
  const h=this.b.world.minute/60,night=h<5||h>21?.56:h<7?.56*(7-h)/2:h>17?.56*(h-17)/4:0;this.shade.setAlpha(night);this.glow.clear();if(night>0){for(const [x,y]of [[386,299],[533,332],[565,201],[356,415],[285,379],[335,379],[540,371],[590,371],[568,152],[618,152],[819,88]])for(let radius=22;radius>0;radius-=3)this.glow.fillStyle(0xffd38a,.009*night/.56).fillCircle(x,y,radius);for(let i=0;i<20;i++){const x=230+i*23,y=230+Math.sin(i*9+t*.0003)*90;this.glow.fillStyle(0xe6edab,.4+.3*Math.sin(t*.003+i)).fillRect(x,y,2,2);}}
  }
  drawResidentRoute(){
