@@ -43,3 +43,10 @@
 .journal-filters input::placeholder{color:#9bb0a3}
 
 .journal-star{margin-inline-start:auto;flex:none;align-self:start;display:grid;place-items:center;width:28px;height:28px;border-radius:4px;color:#adbca7}.journal-star:hover,.journal-star[aria-pressed=true]{color:#e8cc88}.journal-star:focus-visible{outline:2px solid #e8cc88}.diary .tabs{flex-wrap:wrap}
+
+.map-album{margin-top:12px}
+.album-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin-top:10px}
+.album-grid figure{margin:0;border:1px solid #ffffff20;border-radius:6px;overflow:hidden;background:#192729}
+.album-grid img{width:100%;aspect-ratio:8/5;display:block;image-rendering:pixelated}
+.album-grid figcaption,.map-album p{padding:8px;font-size:11px;color:#c1cfb7}
+.album-grid button{margin:0 8px 8px;font-size:10px}

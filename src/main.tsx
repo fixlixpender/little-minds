@@ -1,3 +1,4 @@
+import {ALBUM_LIMIT,loadAlbum,saveAlbum,type IslandPhoto} from './album';
 import {discoverLighthouseClue, lighthouseClue, nearLighthouse} from './lighthouse';
 import{weatherAt,weatherLabels}from './weather';
 import {ActivityPanel,CommunityPanel} from './SharedActivities';import {startActivity,tickActivity,cancelActivity} from './activities';import {activities,type TaskId} from './activityState';import {places,type Place} from './simulation';
@@ -16,8 +17,15 @@ function journalSearchKey(text:string){
  return text.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
 }
 
-function App(){const[language,setLanguage]=useState<Language>(()=>{try{return readLanguage(localStorage)}catch{return 'en'}});const tr=(text:string)=>t(text,language);const[initialWorld]=useState(()=>{try{return restore(localStorage.getItem(SAVE_KEY))}catch{return restore(null)}});const world=useRef(initialWorld);const[,render]=useState(0);const[mode,setMode]=useState<'observer'|'inhabitant'>('observer');const[selected,select]=useState<PersonId|null>('mira');const[paused,pause]=useState(false);const[walkingDestination,setWalkingDestination]=useState<WalkingDestination>("praca");const[showResidentRoute,setShowResidentRoute]=useState(false);const[wideMap,setWideMap]=useState(()=>{try{return localStorage.getItem('little-minds:expanded-map')==='true'}catch{return false}});const[speed,speedSet]=useState(1);const[tab,setTab]=useState('life');const[journalQuery,setJournalQuery]=useState('');const[journalResident,setJournalResident]=useState<PersonId|''>('');const[saved,setSaved]=useState(true);const[sound,setSound]=useState(false);const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
+function App(){const[language,setLanguage]=useState<Language>(()=>{try{return readLanguage(localStorage)}catch{return 'en'}});const tr=(text:string)=>t(text,language);const[initialWorld]=useState(()=>{try{return restore(localStorage.getItem(SAVE_KEY))}catch{return restore(null)}});const world=useRef(initialWorld);const[,render]=useState(0);const[mode,setMode]=useState<'observer'|'inhabitant'>('observer');const[selected,select]=useState<PersonId|null>('mira');const[paused,pause]=useState(false);const[walkingDestination,setWalkingDestination]=useState<WalkingDestination>("praca");const[showResidentRoute,setShowResidentRoute]=useState(false);const[wideMap,setWideMap]=useState(()=>{try{return localStorage.getItem('little-minds:expanded-map')==='true'}catch{return false}});const[speed,speedSet]=useState(1);const[tab,setTab]=useState('life');const[journalQuery,setJournalQuery]=useState('');const[journalResident,setJournalResident]=useState<PersonId|''>('');const[saved,setSaved]=useState(true);const[sound,setSound]=useState(false);const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
  function persist(){try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}}
+ function updateAlbum(next:IslandPhoto[]){
+  try{
+   saveAlbum(localStorage,next);
+   album.current=next;
+   setPhotos(next);
+  }catch{setNotice('Não foi possível guardar no álbum.');}
+ }
  function takePhoto(){
   const renderer=gameRef.current?.renderer;
   if(!renderer)return;
@@ -30,6 +38,10 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    }
    const download=document.createElement('a');
    download.href=photo.src;
+   const weather=weatherAt(day,minute);
+   if(album.current.length<ALBUM_LIMIT){
+    updateAlbum([{id:crypto.randomUUID(),src:photo.src,day,minute,weather},...album.current]);
+   }else setNotice('O álbum está cheio. A fotografia foi descarregada.');
    download.download=`aurora-day-${day}-${time}-${weatherAt(day,minute)}.png`;
    document.body.append(download);
    download.click();
@@ -126,6 +138,25 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    render(n=>n+1);
   }}>{tr(bridge.current.sitting?'Levantar':'Sentar no banco')}</button>
  </div>}
+ <section className="map-album">
+  <button type="button" className="resident-route-toggle" aria-expanded={albumOpen}
+   aria-controls="aurora-album" onClick={()=>setAlbumOpen(open=>!open)}>
+   <Camera size={14} aria-hidden="true"/>{tr('Álbum da Aurora')} · {photos.length}/{ALBUM_LIMIT}
+  </button>
+  <div id="aurora-album" hidden={!albumOpen}>
+   {photos.length===0&&<p>{tr('Usa a câmara para guardar a tua primeira fotografia.')}</p>}
+   <div className="album-grid">
+    {photos.map(photo=><figure key={photo.id}>
+     <img src={photo.src} alt={tr('Fotografia da ilha')} loading="lazy"/>
+     <figcaption>{tr('Dia')} {photo.day} · {timeLabel(photo.minute)} · {tr(weatherLabels[photo.weather])}</figcaption>
+     <button type="button" className="resident-route-toggle"
+      onClick={()=>updateAlbum(album.current.filter(item=>item.id!==photo.id))}>
+      {tr('Retirar do álbum')}
+     </button>
+    </figure>)}
+   </div>
+  </div>
+ </section>
  <ActivityPanel world={w} language={language} onGo={()=>{if(w.sharedActivity){setMode('inhabitant');bridge.current.navigationRequest={target:places[activities[w.sharedActivity.task].place],label:placeLabels[activities[w.sharedActivity.task].place]};}}} onCancel={()=>{cancelActivity(w);persist();render(n=>n+1)}}/>
  <div className="residents-heading"><h2>{tr('Os habitantes')}</h2><span>{tr('3 vidas a cruzarem-se')}</span></div><div className="resident-grid">{(Object.keys(profiles)as PersonId[]).map(id=>{const p=profiles[id],resident=w.residents.find(r=>r.id===id)!;return <button className={`resident-card ${selected===id?'selected':''}`} key={id} onClick={()=>select(id)}><span className={`portrait ${id}`}><span className="pixel-person"/></span><span className="resident-info"><strong>{p.name}<span className="status-dot"/></strong><small>{tr(p.role)}</small><span className="activity">{tr(resident.activity)}</span></span><ChevronRight size={15}/></button>})}</div>
  {mode==='inhabitant'&&<section className="shared-activity">

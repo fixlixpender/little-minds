@@ -6,6 +6,10 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+  'Álbum da Aurora':'Aurora album','Fotografia da ilha':'Photo of the island','Retirar do álbum':'Remove from album',
+  'Usa a câmara para guardar a tua primeira fotografia.':'Use the camera to save your first photo.',
+  'O álbum está cheio. A fotografia foi descarregada.':'The album is full. The photo was downloaded.',
+  'Não foi possível guardar no álbum.':'Could not save to the album.',
   'Tirar fotografia':'Take photo',
   'Não foi possível tirar a fotografia.':'Could not take the photo.',
   'Sentar no banco':'Sit on bench','Levantar':'Stand up',
