@@ -6,6 +6,8 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+  'Tirar fotografia':'Take photo',
+  'Não foi possível tirar a fotografia.':'Could not take the photo.',
   'Sentar no banco':'Sit on bench','Levantar':'Stand up',
   'Favoritos':'Favorites','Marcar como favorito':'Bookmark entry',
   'Carrega na estrela de um registo para o guardar.':'Select the star on a journal entry to bookmark it.',
