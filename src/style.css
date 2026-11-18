@@ -18,3 +18,10 @@
  .wide-map .game-wrap{border-inline:0}
  main:has(.wide-map)>.intro,.wide-map aside,main:has(.wide-map)>footer{margin-inline:3%}
 }
+
+.map-tracking{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:10px 16px;
+ background:#203331;color:#c1cfb7;border:1px solid #ffffff12;border-top:0;font-size:11px}
+.map-tracking>svg{color:#b7cb98;flex:none}
+.map-tracking-text{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px}
+.map-tracking-text strong{color:#e9ead4;font-weight:600}
+.map-tracking-activity{margin-inline-start:auto;color:#b3c4ac}
