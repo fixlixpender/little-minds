@@ -5,14 +5,18 @@ import {skinTones,hairColours,outfitColours} from './avatar';
 import {isLand,clearSegment,findRoute,followRoute,recoverPosition} from './navigation';
 import {t,type Language} from './i18n';
 import Phaser from 'phaser';import {places,profiles,type World,type PersonId,type Point} from './simulation';
-export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;showResidentRoute:boolean;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:{target:Point|PersonId;label:string}|null; onArrival:(label:string)=>void; walkingLabel:string|null; cancelNavigation:boolean; walkingAutomatically:boolean;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
+export const benches = [{x:417,y:362},{x:505,y:329},{x:651,y:304}];
+export function nearbyBench(position:Point){
+ return benches.find(bench=>Math.hypot(position.x-bench.x,position.y-bench.y)<=23);
+}
+export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;showResidentRoute:boolean;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:{target:Point|PersonId;label:string}|null; onArrival:(label:string)=>void; walkingLabel:string|null; sitting:boolean; cancelNavigation:boolean; walkingAutomatically:boolean;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
 export const land=isLand;
 export class Island extends Phaser.Scene{
  walkingLabel:string|null=null;
  followingResident:PersonId|null=null;
  nextFollowUpdate=0;
  b:Bridge; mapLabels:{label:Phaser.GameObjects.Text;source:string}[]=[];lastLanguage:Language|null=null; actors:Record<string,Phaser.GameObjects.Container>={};shade!:Phaser.GameObjects.Rectangle; glow!:Phaser.GameObjects.Graphics;water!:Phaser.GameObjects.Graphics; keys!:Record<string,Phaser.Input.Keyboard.Key>; destination:Point|null=null; playerRoute:Point[]=[]; trail!:Phaser.GameObjects.Graphics; residentTrail!:Phaser.GameObjects.Graphics; communityArt!:Phaser.GameObjects.Graphics; previousMode:Bridge['mode']='observer'; avatarSignature=''; keyboardEnabled=true; visualTime=0; atmosphere!:Phaser.GameObjects.Graphics; reduceMotion=false; facings:Record<string,Facing>={}; lastPositions:Record<string,Point>={}; routes:Record<string,{target:string;points:Point[]}>={}; constructor(b:Bridge){super('aurora');this.b=b;}
- create(){this.reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;this.atmosphere=this.add.graphics().setDepth(750);this.cameras.main.setBackgroundColor('#284a58');this.water=this.add.graphics();this.drawMap();this.trail=this.add.graphics().setDepth(3);this.residentTrail=this.add.graphics().setDepth(760);this.communityArt=this.add.graphics().setDepth(4);for(const person of [...this.b.world.residents,this.b.world.player])Object.assign(person,recoverPosition(person));this.glow=this.add.graphics().setDepth(800);for(const r of this.b.world.residents)this.actor(r.id,r.x,r.y,profiles[r.id].color);this.actor('player',this.b.world.player.x,this.b.world.player.y,'#e7d7bd');this.shade=this.add.rectangle(480,300,960,600,0x101b39,1).setDepth(700).setAlpha(0);this.keys=this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E') as typeof this.keys;this.input.keyboard!.on('keydown-E',()=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled)this.b.onInteract()});this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled){this.followingResident=null;this.walkingLabel=null;const dest={x:p.worldX,y:p.worldY};const route=findRoute(this.b.world.player,dest);if(route.length){this.destination=dest;this.playerRoute=route;}else{this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;}}});}
+ create(){this.reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;this.atmosphere=this.add.graphics().setDepth(750);this.cameras.main.setBackgroundColor('#284a58');this.water=this.add.graphics();this.drawMap();this.trail=this.add.graphics().setDepth(3);this.residentTrail=this.add.graphics().setDepth(760);this.communityArt=this.add.graphics().setDepth(4);for(const person of [...this.b.world.residents,this.b.world.player])Object.assign(person,recoverPosition(person));this.glow=this.add.graphics().setDepth(800);for(const r of this.b.world.residents)this.actor(r.id,r.x,r.y,profiles[r.id].color);this.actor('player',this.b.world.player.x,this.b.world.player.y,'#e7d7bd');this.shade=this.add.rectangle(480,300,960,600,0x101b39,1).setDepth(700).setAlpha(0);this.keys=this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E') as typeof this.keys;this.input.keyboard!.on('keydown-E',()=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled)this.b.onInteract()});this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled){this.followingResident=null;this.walkingLabel=null;this.b.sitting=false;const dest={x:p.worldX,y:p.worldY};const route=findRoute(this.b.world.player,dest);if(route.length){this.destination=dest;this.playerRoute=route;}else{this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;}}});}
  drawMap(){const c=document.createElement('canvas');c.width=960;c.height=600;const g=c.getContext('2d')!;g.imageSmoothingEnabled=false;let seed=124;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const rect=(x:number,y:number,w:number,h:number,color:string)=>{g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),w,h);};
  for(let y=20;y<580;y+=4)for(let x=20;x<940;x+=4){if(land(x,y)){const coast=!land(x+12,y)||!land(x-12,y)||!land(x,y+12)||!land(x,y-12);rect(x,y,4,4,coast?'#bba77a':['#71875b','#788d5e','#7c915f','#829563'][Math.floor(rand()*4)]);if(rand()<.09&&!coast)rect(x,y,2,2,'#a0aa70');}else if(land(x-12,y)||land(x+12,y)||land(x,y-12)||land(x,y+12))rect(x,y,4,4,'#648581');}
  const path=(a:Point,b:Point,width=16)=>{g.strokeStyle='#b5aa83';g.lineWidth=width;g.lineCap='round';g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();};for(const p of Object.values(places))path(places.praca,p);for(let i=0;i<1100;i++){const x=180+rand()*620,y=120+rand()*380;if(land(x,y)&&rand()<.15)rect(x,y,2,2,'#bac08a');}
@@ -30,7 +34,7 @@ export class Island extends Phaser.Scene{
  rect(490,485,40,91,'#514f43');for(let i=0;i<15;i++)rect(491,485+i*6,38,4,i%2?'#99866b':'#ac9677');for(const x of [487,529])for(const y of [490,525,565]){rect(x,y,4,13,'#615c48');rect(x-1,y,6,3,'#c1ad84');}rect(540,525,12,34,'#c4b58e');rect(543,528,6,26,'#736b55');
  // Lighthouse on the eastern headland.
  rect(797,161,43,14,'#5a6558');rect(805,100,28,62,'#c4c4aa');rect(805,126,28,12,'#8c7970');rect(801,96,36,6,'#565b56');rect(807,80,24,17,'#b9af80');rect(817,83,4,13,'#f4d693');g.fillStyle='#5c6661';g.beginPath();g.moveTo(798,80);g.lineTo(819,65);g.lineTo(840,80);g.fill();rect(815,145,9,16,'#505851');
- const bench=(x:number,y:number)=>{rect(x,y,24,5,'#ac8964');rect(x,y-6,24,4,'#b39772');rect(x+3,y+5,3,5,'#5b5e49');rect(x+19,y+5,3,5,'#5b5e49');};bench(405,363);bench(493,330);bench(639,305);
+ const bench=(x:number,y:number)=>{rect(x,y,24,5,'#ac8964');rect(x,y-6,24,4,'#b39772');rect(x+3,y+5,3,5,'#5b5e49');rect(x+19,y+5,3,5,'#5b5e49');};for(const seat of benches)bench(seat.x-12,seat.y+1);
  for(const [x,y]of [[386,315],[533,348],[565,217],[356,431]]){rect(x,y-18,3,22,'#5b6554');rect(x-3,y-22,9,8,'#e3c487');rect(x-4,y-24,11,3,'#5c6557');}
  for(let i=0;i<100;i++){const x=240+rand()*450,y=150+rand()*300;if(land(x,y)&&rand()<.5){rect(x,y,2,4,'#4d7347');rect(x-1,y,4,2,rand()>.5?'#e3c689':'#ba96a4');}}
  this.textures.addCanvas('island',c);this.add.image(0,0,'island').setOrigin(0).setDepth(1);
@@ -48,7 +52,7 @@ export class Island extends Phaser.Scene{
  this.residentTrail.clear();
  if(this.b.mode==='observer'&&this.b.showResidentRoute)this.drawResidentRoute();
 
- if(this.b.mode!==this.previousMode){this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;this.previousMode=this.b.mode;}
+ if(this.b.mode!==this.previousMode){this.b.sitting=false;this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;this.previousMode=this.b.mode;}
  if(this.b.cancelNavigation){
   this.b.cancelNavigation=false;
   this.b.navigationRequest=null;
@@ -57,6 +61,7 @@ export class Island extends Phaser.Scene{
  }
  if(this.b.mode==='inhabitant'&&this.b.inputEnabled){
  if(this.b.navigationRequest){
+  this.b.sitting=false;
   const {target:request,label}=this.b.navigationRequest;
   this.walkingLabel=label;
   this.b.navigationRequest=null;
@@ -82,6 +87,7 @@ export class Island extends Phaser.Scene{
  const dy=Number(this.keys.S.isDown||this.keys.DOWN.isDown)-Number(this.keys.W.isDown||this.keys.UP.isDown)+this.b.direction.y;
  let moving=false;
  if(dx||dy){
+ this.b.sitting=false;
  this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;
  const d=Math.hypot(dx,dy),nx=p.x+dx/d*seconds*72,ny=p.y+dy/d*seconds*72;
  if(clearSegment(p,{x:nx,y:ny})){p.x=nx;p.y=ny;moving=true;}
@@ -153,13 +159,18 @@ export class Island extends Phaser.Scene{
  const label=actor.list[1] as Phaser.GameObjects.Text;label.setText(profile.name||t('Tu',this.b.language));
  }
  animateActor(id:string,position:Point,moving:boolean,time:number){
+ const seated=id==='player'&&this.b.sitting;
+ const seat=seated?nearbyBench(position):undefined;
  const actor=this.actors[id],phase=moving?Math.sin(time*.016):0;
  const facing=this.facings[id]=facingFromMovement(this.lastPositions[id],position,this.facings[id]);this.lastPositions[id]={...position};
- actor.setPosition(Math.round(position.x),Math.round(position.y)).setDepth(position.y+10);
- const body=actor.list[0] as Phaser.GameObjects.Graphics;body.y=moving?-Math.abs(phase):0;
+ const display=seat??position;
+ actor.setPosition(Math.round(display.x),Math.round(display.y)).setDepth(display.y+10);
+ const body=actor.list[0] as Phaser.GameObjects.Graphics;body.y=seat?5:moving?-Math.abs(phase):0;
  this.drawPerson(body,id,facing,phase);
  const legs=actor.getByName('legs') as Phaser.GameObjects.Graphics;
- legs.clear().fillStyle(0x354243).fillRect(-4,4+phase*2,3,4).fillRect(1,4-phase*2,3,4);
+ legs.clear().fillStyle(0x354243);
+ if(seat)legs.fillRect(-5,7,4,3).fillRect(1,7,4,3);
+ else legs.fillRect(-4,4+phase*2,3,4).fillRect(1,4-phase*2,3,4);
  const cue=actor.getByName('cue') as Phaser.GameObjects.Graphics;cue.clear();
  if(id!=='player')this.drawCue(cue,actorCue(this.b.world,id as PersonId,this.b.mode==='inhabitant'),time);
  }
