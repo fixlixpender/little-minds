@@ -6,6 +6,11 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+  'Examinar as marcas':'Inspect the markings',
+  'Marcas no farol':'Lighthouse markings',
+  'Há marcas na pedra junto ao farol. Aproxima-te para as examinar.':'There are markings in the stone by the lighthouse. Get closer to inspect them.',
+  'Descobriste uma inscrição no farol. Pergunta à Luma sobre a ilha.':'You found an inscription at the lighthouse. Ask Luma about the island.',
+  'Na base do farol, três pontos ligam-se por um risco fino. Ao lado, alguém gravou: «Quando a luz se apagar, segue as estrelas.»':'At the foot of the lighthouse, a thin line connects three dots. Beside them someone carved, “When the light goes out, follow the stars.”',
  'Chuva costeira':'Coastal rain','Neblina da manhã':'Morning mist',
  'encontros':'meetings','História concluída':'Story complete','História em curso':'Story in progress','Próximo encontro':'Next meeting','Podem continuar a partilhar esta atividade.':'You can keep sharing this activity.','Cada encontro concluído num novo dia faz a história avançar.':'Each completed meeting on a new day advances the story.',
   'UM MOMENTO JUNTOS':'A MOMENT TOGETHER','Cuidar da horta':'Tend the garden','Testar o pequeno barco':'Test the little boat','Desenhar uma constelação':'Sketch a constellation',

@@ -8,6 +8,7 @@ import type{Topic}from './socialState';
 type Line={en:string;'pt-PT':string};
 const line=(en:string,pt:string):Line=>({en,'pt-PT':pt});
 export const replies:Record<string,Line>={
+ 'luma.inscription':line('Follow the stars… Those three dots might mark a way home. Come stargazing with me and we can compare them with the sky.','Segue as estrelas… Aqueles três pontos talvez indiquem o caminho de volta. Vem observar o céu comigo e podemos compará-los com as estrelas.'),
  'mira.rain':line('The rain is doing the watering for me. I still check the seedlings. Quietly, of course.','A chuva está a tratar da rega por mim. Ainda vou espreitar as sementes. Com cuidado, claro.'),
  'theo.rain':line('Excellent weather for testing waterproof inventions. Less excellent for my notebook.','Um tempo excelente para testar invenções à prova de água. Menos excelente para o meu caderno.'),
  'luma.rain':line('We can’t see the stars now, but they haven’t gone anywhere. The sky should clear this evening.','Agora não vemos as estrelas, mas elas não foram a lado nenhum. O céu deve abrir ao fim da tarde.'),
@@ -36,6 +37,7 @@ export const replies:Record<string,Line>={
 };
 export function replyText(key:string,language:Language):string{return replies[key]?.[language]??t('O mundo segue o seu ritmo',language);}
 export function chooseReply(world:World,id:PersonId,topic:Topic):string{
+ if(id==='luma'&&topic==='island'&&world.lighthouseClueFound)return 'luma.inscription';
  if(topic!=='day')return `${id}.${topic}`;
  const resident=world.residents.find(r=>r.id===id)!;
  if(resident.activity==='A descansar em casa')return `${id}.rest`;
