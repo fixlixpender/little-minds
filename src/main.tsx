@@ -80,11 +80,19 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   setNotice('Descobriste uma inscrição no farol. Pergunta à Luma sobre a ilha.');
   render(n=>n+1);
  }
+ function changeMode(next:'observer'|'inhabitant'){
+  setMode(next);
+  bridge.current.direction={x:0,y:0};
+  if(next==='inhabitant'&&!world.current.playerProfile.name)setEditorOpen(true);
+ }
+ function stopWalking(){
+  bridge.current.cancelNavigation=true;
+ }
  function arrange(task:TaskId){if(startActivity(world.current,task)){persist();setConversation(null);setMode('inhabitant');render(n=>n+1)}}
  function saveCharacter(profile:AvatarProfile){world.current.playerProfile=normalizeAvatar(profile);try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}setEditorOpen(false);setMode('inhabitant');setNotice('A tua personagem está pronta. A ilha espera por ti!');render(n=>n+1);}
  return <div className="app"><header><a className="brand" href="#" aria-label={tr("Little Minds início")}><span className="brand-icon">✦</span><span>{tr('little minds')}<small>{tr('PEQUENAS VIDAS. GRANDES HISTÓRIAS.')}</small></span></a><div className="island-name"><span className="live-dot"/>{tr('Ilha Aurora')}<span className="tag">{tr('ALPHA 0.1')}</span></div><div className="header-settings"><button className="character-button" onClick={()=>setEditorOpen(true)} aria-label={tr('Editar personagem')}><UserRound size={16}/><span>{tr('A tua personagem')}</span></button><select className="language-select" aria-label="Language / Idioma" value={language} onChange={e=>{setLanguage(e.target.value as Language);setNotice('')}}><option value="en">English</option><option value="pt-PT">Português (PT)</option></select><button className="icon-button" onClick={toggleSound} aria-label={tr(sound?'Desligar ambiente sonoro':'Ligar ambiente sonoro')}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}</button></div></header>
  <main><section className="intro"><div><div className="eyebrow">{tr('UM PEQUENO MUNDO VIVO')}</div><h1>{tr('A vida acontece aqui')}<span>.</span></h1><p>{tr('Sem pressa. Cada encontro pode ser o início de uma história.')}</p></div><div className="world-clock">{night?<Moon size={24}/>:<Sun size={26}/>}<div><strong>{timeLabel(w.minute)}</strong><small>{tr('Dia')} {w.day} <span>·</span> {tr(weatherAt(w.day,w.minute)!=='clear'?weatherLabels[weatherAt(w.day,w.minute)]:night?'Sob as estrelas':h>17?'Fim de tarde':'Céu tranquilo')}</small></div></div></section>
- <div className={wideMap ? "workspace wide-map" : "workspace"}><section className="world-panel"><div className="world-toolbar"><div className="mode-switch"><button className={mode==='observer'?'active':''} onClick={()=>{setMode('observer');bridge.current.direction={x:0,y:0}}}><Eye size={15}/>{tr('Observador')}</button><button className={mode==='inhabitant'?'active':''} onClick={()=>{setMode('inhabitant');if(!world.current.playerProfile.name)setEditorOpen(true)}}><Footprints size={15}/>{tr('Habitante')}</button></div><div className="simulation-controls"><button type="button" onClick={takePhoto}
+ <div className={wideMap ? "workspace wide-map" : "workspace"}><section className="world-panel"><div className="world-toolbar"><div className="mode-switch"><button className={mode==='observer'?'active':''} onClick={()=>changeMode('observer')}><Eye size={15}/>{tr('Observador')}</button><button className={mode==='inhabitant'?'active':''} onClick={()=>changeMode('inhabitant')}><Footprints size={15}/>{tr('Habitante')}</button></div><div className="simulation-controls"><button type="button" onClick={takePhoto}
   title={tr('Tirar fotografia')} aria-label={tr('Tirar fotografia')}><Camera size={15}/></button><button
    className={wideMap?'chosen':''} aria-pressed={wideMap} aria-label={tr('Mapa ampliado')}
    title={tr(wideMap?'Reduzir mapa':'Ampliar mapa')} onClick={()=>setWideMap(value=>!value)}>
@@ -94,6 +102,9 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  onKeyDown={event=>{
   if(event.target!==event.currentTarget||event.repeat||event.ctrlKey||event.metaKey||event.altKey)return;
   switch(event.key.toLowerCase()){
+   case 'o': changeMode('observer'); break;
+   case 'h': changeMode('inhabitant'); break;
+   case 'x': if(mode==='inhabitant')stopWalking(); break;
    case 'p': pause(value=>!value); break;
    case 'm': setWideMap(value=>!value); break;
    case 'c': takePhoto(); break;
@@ -138,7 +149,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   </select>
   <button className="resident-route-toggle" type="submit"><Footprints size={14} aria-hidden="true"/>{tr('Caminhar até lá')}</button>
   {bridge.current.walkingAutomatically&&<button className="resident-route-toggle" type="button"
-   onClick={()=>{bridge.current.cancelNavigation=true}}>
+   onClick={stopWalking}>
    {tr('Parar caminhada')}
   </button>}
  </form>}
@@ -152,10 +163,13 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  </div>}
  <details className="keyboard-guide">
   <summary>{tr('Controlos de teclado')}</summary>
-  <p>{tr('Clica no mapa ou seleciona-o com Tab para usar P, M e C.')}</p>
+  <p>{tr('Clica no mapa ou seleciona-o com Tab para usar os atalhos.')}</p>
   <dl>
    <div><dt><kbd>WASD</kbd> / <kbd>↑ ↓ ← →</kbd></dt><dd>{tr('Mover no modo Habitante')}</dd></div>
    <div><dt><kbd>E</kbd></dt><dd>{tr('Conversar no modo Habitante')}</dd></div>
+   <div><dt><kbd>O</kbd></dt><dd>{tr('Observador')}</dd></div>
+   <div><dt><kbd>H</kbd></dt><dd>{tr('Habitante')}</dd></div>
+   <div><dt><kbd>X</kbd></dt><dd>{tr('Parar caminhada')}</dd></div>
    <div><dt><kbd>P</kbd></dt><dd>{tr('Pausar ou retomar')}</dd></div>
    <div><dt><kbd>M</kbd></dt><dd>{tr('Ampliar ou reduzir o mapa')}</dd></div>
    <div><dt><kbd>C</kbd></dt><dd>{tr('Tirar fotografia')}</dd></div>

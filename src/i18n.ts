@@ -7,7 +7,7 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
   'Mapa interativo':'Interactive map','Controlos de teclado':'Keyboard controls',
-  'Clica no mapa ou seleciona-o com Tab para usar P, M e C.':'Click the map or focus it with Tab to use P, M and C.',
+  'Clica no mapa ou seleciona-o com Tab para usar os atalhos.':'Click the map or focus it with Tab to use shortcuts.',
   'Mover no modo Habitante':'Move in Inhabitant mode','Conversar no modo Habitante':'Talk in Inhabitant mode',
   'Pausar ou retomar':'Pause or resume','Ampliar ou reduzir o mapa':'Expand or restore the map',
   'Álbum da Aurora':'Aurora album','Fotografia da ilha':'Photo of the island','Retirar do álbum':'Remove from album',
