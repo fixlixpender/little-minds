@@ -34,3 +34,10 @@
 .map-walk .language-select{max-width:100%;min-height:32px}
 
 .map-walk-status{position:absolute;top:36px;left:50%;transform:translateX(-50%);background:#182729ed;color:#e9ead4;border:1px solid #b7cb9855;border-radius:4px;padding:5px 9px;font-size:11px;text-align:center;pointer-events:none}
+
+.journal-filters{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;flex-shrink:0}
+.journal-filters input,.journal-filters select{box-sizing:border-box;min-width:0;min-height:30px;
+ background:#102321;color:#dee7d8;border:1px solid #ffffff30;border-radius:4px;padding:5px 7px;font:inherit;font-size:11px}
+.journal-filters input{flex:1 1 110px;width:100%}
+.journal-filters select{flex:1 1 85px;max-width:100%}
+.journal-filters input::placeholder{color:#9bb0a3}
