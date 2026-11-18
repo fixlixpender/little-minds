@@ -72,6 +72,13 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
     !(entry.kind==='social'&&entry.text.includes(profiles[journalResident].name)))return false;
   return !query||journalSearchKey(eventText(entry,language)).includes(query);
  });
+ function toggleBench(){
+  if(mode!=='inhabitant'||!bridge.current.inputEnabled)return;
+  if(!bridge.current.sitting&&!nearbyBench(world.current.player))return;
+  bridge.current.sitting=!bridge.current.sitting;
+  if(bridge.current.sitting)bridge.current.cancelNavigation=true;
+  render(n=>n+1);
+ }
  function inspectLighthouse(){
   if(mode!=='inhabitant'||editorOpen||conversation||!nearLighthouse(w))return;
   if(!discoverLighthouseClue(w)){setNotice(lighthouseClue);return;}
@@ -104,6 +111,8 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   switch(event.key.toLowerCase()){
    case 'o': changeMode('observer'); break;
    case 'h': changeMode('inhabitant'); break;
+   case 'b': toggleBench(); break;
+   case 'f': inspectLighthouse(); break;
    case 'x': if(mode==='inhabitant')stopWalking(); break;
    case 'p': pause(value=>!value); break;
    case 'm': setWideMap(value=>!value); break;
@@ -154,12 +163,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   </button>}
  </form>}
  {mode==='inhabitant'&&(bridge.current.sitting||nearbyBench(w.player))&&<div className="map-tracking">
-  <button type="button" className="resident-route-toggle" onClick={()=>{
-   if(!bridge.current.sitting&&!nearbyBench(world.current.player))return;
-   bridge.current.sitting=!bridge.current.sitting;
-   if(bridge.current.sitting)bridge.current.cancelNavigation=true;
-   render(n=>n+1);
-  }}>{tr(bridge.current.sitting?'Levantar':'Sentar no banco')}</button>
+  <button type="button" className="resident-route-toggle" onClick={toggleBench}>{tr(bridge.current.sitting?'Levantar':'Sentar no banco')}</button>
  </div>}
  <details className="keyboard-guide">
   <summary>{tr('Controlos de teclado')}</summary>
@@ -169,6 +173,8 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    <div><dt><kbd>E</kbd></dt><dd>{tr('Conversar no modo Habitante')}</dd></div>
    <div><dt><kbd>O</kbd></dt><dd>{tr('Observador')}</dd></div>
    <div><dt><kbd>H</kbd></dt><dd>{tr('Habitante')}</dd></div>
+   <div><dt><kbd>B</kbd></dt><dd>{tr('Sentar ou levantar junto a um banco')}</dd></div>
+   <div><dt><kbd>F</kbd></dt><dd>{tr('Examinar as marcas junto ao farol')}</dd></div>
    <div><dt><kbd>X</kbd></dt><dd>{tr('Parar caminhada')}</dd></div>
    <div><dt><kbd>P</kbd></dt><dd>{tr('Pausar ou retomar')}</dd></div>
    <div><dt><kbd>M</kbd></dt><dd>{tr('Ampliar ou reduzir o mapa')}</dd></div>
