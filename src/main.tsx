@@ -90,7 +90,19 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    title={tr(wideMap?'Reduzir mapa':'Ampliar mapa')} onClick={()=>setWideMap(value=>!value)}>
    {wideMap?<Minimize size={15}/>:<Maximize size={15}/>}
  </button><button onClick={()=>pause(!paused)} aria-label={tr(paused?'Retomar':'Pausar')}>{paused?<Play size={15}/>:<Pause size={15}/>}</button>{[1,3,10].map(n=><button key={n} className={speed===n?'chosen':''} onClick={()=>speedSet(n)}>{n}×</button>)}</div></div>
- <div className="game-wrap"><div ref={host} className="game"/>
+ <div className="game-wrap" tabIndex={0} role="region" aria-label={tr('Mapa interativo')}
+ onKeyDown={event=>{
+  if(event.target!==event.currentTarget||event.repeat||event.ctrlKey||event.metaKey||event.altKey)return;
+  switch(event.key.toLowerCase()){
+   case 'p': pause(value=>!value); break;
+   case 'm': setWideMap(value=>!value); break;
+   case 'c': takePhoto(); break;
+   default: return;
+  }
+  event.preventDefault();
+ }} onPointerDown={event=>{
+  if(event.target instanceof HTMLCanvasElement)event.currentTarget.focus({preventScroll:true});
+ }}><div ref={host} className="game"/>
  {mode==='inhabitant'&&(bridge.current.walkingLabel||arrival)&&<span className="map-walk-status" role="status">
   {bridge.current.walkingLabel
    ?tr('A caminhar para {destino}').replace('{destino}',tr(bridge.current.walkingLabel))
@@ -138,6 +150,17 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    render(n=>n+1);
   }}>{tr(bridge.current.sitting?'Levantar':'Sentar no banco')}</button>
  </div>}
+ <details className="keyboard-guide">
+  <summary>{tr('Controlos de teclado')}</summary>
+  <p>{tr('Clica no mapa ou seleciona-o com Tab para usar P, M e C.')}</p>
+  <dl>
+   <div><dt><kbd>WASD</kbd> / <kbd>↑ ↓ ← →</kbd></dt><dd>{tr('Mover no modo Habitante')}</dd></div>
+   <div><dt><kbd>E</kbd></dt><dd>{tr('Conversar no modo Habitante')}</dd></div>
+   <div><dt><kbd>P</kbd></dt><dd>{tr('Pausar ou retomar')}</dd></div>
+   <div><dt><kbd>M</kbd></dt><dd>{tr('Ampliar ou reduzir o mapa')}</dd></div>
+   <div><dt><kbd>C</kbd></dt><dd>{tr('Tirar fotografia')}</dd></div>
+  </dl>
+ </details>
  <section className="map-album">
   <button type="button" className="resident-route-toggle" aria-expanded={albumOpen}
    aria-controls="aurora-album" onClick={()=>setAlbumOpen(open=>!open)}>

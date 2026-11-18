@@ -50,3 +50,12 @@
 .album-grid img{width:100%;aspect-ratio:8/5;display:block;image-rendering:pixelated}
 .album-grid figcaption,.map-album p{padding:8px;font-size:11px;color:#c1cfb7}
 .album-grid button{margin:0 8px 8px;font-size:10px}
+
+.game-wrap:focus-visible{outline:2px solid #d7bc83;outline-offset:-2px}
+.keyboard-guide{margin-top:12px;padding:10px 12px;border:1px solid #ffffff20;border-radius:6px;background:#192729;color:#dce7cc;font-size:11px}
+.keyboard-guide summary{cursor:pointer}
+.keyboard-guide p{color:#b3c4ac;line-height:1.5}
+.keyboard-guide dl{display:grid;gap:8px;margin:12px 0 0}
+.keyboard-guide dl div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.keyboard-guide dd{margin:0}
+.keyboard-guide kbd{padding:2px 5px;border:1px solid #ffffff32;border-radius:3px;background:#102321}

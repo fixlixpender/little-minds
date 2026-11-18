@@ -6,6 +6,10 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+  'Mapa interativo':'Interactive map','Controlos de teclado':'Keyboard controls',
+  'Clica no mapa ou seleciona-o com Tab para usar P, M e C.':'Click the map or focus it with Tab to use P, M and C.',
+  'Mover no modo Habitante':'Move in Inhabitant mode','Conversar no modo Habitante':'Talk in Inhabitant mode',
+  'Pausar ou retomar':'Pause or resume','Ampliar ou reduzir o mapa':'Expand or restore the map',
   'Álbum da Aurora':'Aurora album','Fotografia da ilha':'Photo of the island','Retirar do álbum':'Remove from album',
   'Usa a câmara para guardar a tua primeira fotografia.':'Use the camera to save your first photo.',
   'O álbum está cheio. A fotografia foi descarregada.':'The album is full. The photo was downloaded.',
