@@ -32,3 +32,5 @@
 .resident-route-toggle:focus-visible{outline:2px solid #e9ead4;outline-offset:2px}
 
 .map-walk .language-select{max-width:100%;min-height:32px}
+
+.map-walk-status{position:absolute;top:36px;left:50%;transform:translateX(-50%);background:#182729ed;color:#e9ead4;border:1px solid #b7cb9855;border-radius:4px;padding:5px 9px;font-size:11px;text-align:center;pointer-events:none}

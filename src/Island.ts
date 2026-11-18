@@ -5,13 +5,14 @@ import {skinTones,hairColours,outfitColours} from './avatar';
 import {isLand,clearSegment,findRoute,followRoute,recoverPosition} from './navigation';
 import {t,type Language} from './i18n';
 import Phaser from 'phaser';import {places,profiles,type World,type PersonId,type Point} from './simulation';
-export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;showResidentRoute:boolean;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:Point|PersonId|null; cancelNavigation:boolean; walkingAutomatically:boolean;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
+export type Bridge={world:World;mode:'observer'|'inhabitant';selected:PersonId|null;showResidentRoute:boolean;paused:boolean;speed:number;language:Language;inputEnabled:boolean;navigationRequest:{target:Point|PersonId;label:string}|null; onArrival:(label:string)=>void; walkingLabel:string|null; cancelNavigation:boolean; walkingAutomatically:boolean;direction:Point;onSelect:(id:PersonId)=>void;onInteract:()=>void};
 export const land=isLand;
 export class Island extends Phaser.Scene{
+ walkingLabel:string|null=null;
  followingResident:PersonId|null=null;
  nextFollowUpdate=0;
  b:Bridge; mapLabels:{label:Phaser.GameObjects.Text;source:string}[]=[];lastLanguage:Language|null=null; actors:Record<string,Phaser.GameObjects.Container>={};shade!:Phaser.GameObjects.Rectangle; glow!:Phaser.GameObjects.Graphics;water!:Phaser.GameObjects.Graphics; keys!:Record<string,Phaser.Input.Keyboard.Key>; destination:Point|null=null; playerRoute:Point[]=[]; trail!:Phaser.GameObjects.Graphics; residentTrail!:Phaser.GameObjects.Graphics; communityArt!:Phaser.GameObjects.Graphics; previousMode:Bridge['mode']='observer'; avatarSignature=''; keyboardEnabled=true; visualTime=0; atmosphere!:Phaser.GameObjects.Graphics; reduceMotion=false; facings:Record<string,Facing>={}; lastPositions:Record<string,Point>={}; routes:Record<string,{target:string;points:Point[]}>={}; constructor(b:Bridge){super('aurora');this.b=b;}
- create(){this.reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;this.atmosphere=this.add.graphics().setDepth(750);this.cameras.main.setBackgroundColor('#284a58');this.water=this.add.graphics();this.drawMap();this.trail=this.add.graphics().setDepth(3);this.residentTrail=this.add.graphics().setDepth(760);this.communityArt=this.add.graphics().setDepth(4);for(const person of [...this.b.world.residents,this.b.world.player])Object.assign(person,recoverPosition(person));this.glow=this.add.graphics().setDepth(800);for(const r of this.b.world.residents)this.actor(r.id,r.x,r.y,profiles[r.id].color);this.actor('player',this.b.world.player.x,this.b.world.player.y,'#e7d7bd');this.shade=this.add.rectangle(480,300,960,600,0x101b39,1).setDepth(700).setAlpha(0);this.keys=this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E') as typeof this.keys;this.input.keyboard!.on('keydown-E',()=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled)this.b.onInteract()});this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled){this.followingResident=null;const dest={x:p.worldX,y:p.worldY};const route=findRoute(this.b.world.player,dest);if(route.length){this.destination=dest;this.playerRoute=route;}else{this.destination=null;this.playerRoute=[];this.followingResident=null;}}});}
+ create(){this.reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;this.atmosphere=this.add.graphics().setDepth(750);this.cameras.main.setBackgroundColor('#284a58');this.water=this.add.graphics();this.drawMap();this.trail=this.add.graphics().setDepth(3);this.residentTrail=this.add.graphics().setDepth(760);this.communityArt=this.add.graphics().setDepth(4);for(const person of [...this.b.world.residents,this.b.world.player])Object.assign(person,recoverPosition(person));this.glow=this.add.graphics().setDepth(800);for(const r of this.b.world.residents)this.actor(r.id,r.x,r.y,profiles[r.id].color);this.actor('player',this.b.world.player.x,this.b.world.player.y,'#e7d7bd');this.shade=this.add.rectangle(480,300,960,600,0x101b39,1).setDepth(700).setAlpha(0);this.keys=this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E') as typeof this.keys;this.input.keyboard!.on('keydown-E',()=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled)this.b.onInteract()});this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{if(this.b.mode==='inhabitant'&&this.b.inputEnabled){this.followingResident=null;this.walkingLabel=null;const dest={x:p.worldX,y:p.worldY};const route=findRoute(this.b.world.player,dest);if(route.length){this.destination=dest;this.playerRoute=route;}else{this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;}}});}
  drawMap(){const c=document.createElement('canvas');c.width=960;c.height=600;const g=c.getContext('2d')!;g.imageSmoothingEnabled=false;let seed=124;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const rect=(x:number,y:number,w:number,h:number,color:string)=>{g.fillStyle=color;g.fillRect(Math.round(x),Math.round(y),w,h);};
  for(let y=20;y<580;y+=4)for(let x=20;x<940;x+=4){if(land(x,y)){const coast=!land(x+12,y)||!land(x-12,y)||!land(x,y+12)||!land(x,y-12);rect(x,y,4,4,coast?'#bba77a':['#71875b','#788d5e','#7c915f','#829563'][Math.floor(rand()*4)]);if(rand()<.09&&!coast)rect(x,y,2,2,'#a0aa70');}else if(land(x-12,y)||land(x+12,y)||land(x,y-12)||land(x,y+12))rect(x,y,4,4,'#648581');}
  const path=(a:Point,b:Point,width=16)=>{g.strokeStyle='#b5aa83';g.lineWidth=width;g.lineCap='round';g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();};for(const p of Object.values(places))path(places.praca,p);for(let i=0;i<1100;i++){const x=180+rand()*620,y=120+rand()*380;if(land(x,y)&&rand()<.15)rect(x,y,2,2,'#bac08a');}
@@ -35,7 +36,7 @@ export class Island extends Phaser.Scene{
  this.textures.addCanvas('island',c);this.add.image(0,0,'island').setOrigin(0).setDepth(1);
  for(const [text,x,y] of [['FLORESTA',250,132],['HORTA',300,247],['PRAÇA',460,392],['LAGO',664,218],['CAIS',510,587],['FAROL ABANDONADO',815,188]] as [string,number,number][]){const label=this.add.text(x,y,t(text,this.b.language),{fontFamily:'monospace',fontSize:'9px',color:'#e4dfbd',stroke:'#334d40',strokeThickness:3,letterSpacing:2}).setOrigin(.5).setDepth(2).setAlpha(.8);this.mapLabels.push({label,source:text});}}
  actor(id:string,x:number,y:number,color:string){const body=this.add.graphics();body.fillStyle(0x182e2d,.25).fillEllipse(0,5,15,6);body.fillStyle(Phaser.Display.Color.HexStringToColor(color).color).fillRect(-4,-6,8,10);body.fillStyle(0xe7c6a1).fillRect(-4,-13,8,7);body.fillStyle(id==='mira'?0x4e5940:id==='theo'?0x775440:0x5e596d).fillRect(-5,-15,10,4);const label=this.add.text(0,-35,id==='player'?t('Tu',this.b.language):profiles[id as PersonId].name,{fontFamily:'monospace',fontSize:'10px',color:'#fff4cf',backgroundColor:'#263d37cc',padding:{x:4,y:2}}).setOrigin(.5);const actor=this.add.container(x,y,[body,label]).setDepth(y+10);actor.setSize(26,38).setInteractive();actor.on('pointerdown',(_:unknown,__:unknown,___:unknown,event:Phaser.Types.Input.EventData)=>{event.stopPropagation();if(id!=='player')this.b.onSelect(id as PersonId)});const legs=this.add.graphics().setName('legs'),cue=this.add.graphics().setName('cue');actor.add([legs,cue]);this.actors[id]=actor;this.facings[id]='front';this.lastPositions[id]={x,y};}
- update(tick:number,dt:number){if(!this.b.paused)this.visualTime+=Math.min(dt,100);const t=this.visualTime;this.updateLanguage();this.updateAvatar();this.drawCommunity(tick);this.drawWeather(this.reduceMotion?0:this.visualTime);if(this.keyboardEnabled!==this.b.inputEnabled){this.keyboardEnabled=this.b.inputEnabled;this.input.keyboard!.enabled=this.b.inputEnabled;if(this.b.inputEnabled)this.input.keyboard!.enableGlobalCapture();else{this.input.keyboard!.disableGlobalCapture();for(const key of Object.values(this.keys))key.reset();this.destination=null;this.playerRoute=[];this.followingResident=null;}}const seconds=Math.min(dt/1000,.1);drawSea(this.water,this.reduceMotion?0:this.visualTime,this.b.world.minute);
+ update(tick:number,dt:number){if(!this.b.paused)this.visualTime+=Math.min(dt,100);const t=this.visualTime;this.updateLanguage();this.updateAvatar();this.drawCommunity(tick);this.drawWeather(this.reduceMotion?0:this.visualTime);if(this.keyboardEnabled!==this.b.inputEnabled){this.keyboardEnabled=this.b.inputEnabled;this.input.keyboard!.enabled=this.b.inputEnabled;if(this.b.inputEnabled)this.input.keyboard!.enableGlobalCapture();else{this.input.keyboard!.disableGlobalCapture();for(const key of Object.values(this.keys))key.reset();this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;}}const seconds=Math.min(dt/1000,.1);drawSea(this.water,this.reduceMotion?0:this.visualTime,this.b.world.minute);
  for(const r of this.b.world.residents){
  if(!this.routes[r.id]||this.routes[r.id].target!==r.target)this.routes[r.id]={target:r.target,points:findRoute(r,places[r.target])};
  const moving=!this.b.paused&&followRoute(r,this.routes[r.id].points,seconds*15*Math.sqrt(this.b.speed));
@@ -47,45 +48,54 @@ export class Island extends Phaser.Scene{
  this.residentTrail.clear();
  if(this.b.mode==='observer'&&this.b.showResidentRoute)this.drawResidentRoute();
 
- if(this.b.mode!==this.previousMode){this.destination=null;this.playerRoute=[];this.followingResident=null;this.previousMode=this.b.mode;}
+ if(this.b.mode!==this.previousMode){this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;this.previousMode=this.b.mode;}
  if(this.b.cancelNavigation){
   this.b.cancelNavigation=false;
   this.b.navigationRequest=null;
   this.destination=null;
-  this.playerRoute=[];this.followingResident=null;
+  this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;
  }
  if(this.b.mode==='inhabitant'&&this.b.inputEnabled){
  if(this.b.navigationRequest){
-  const request=this.b.navigationRequest;
+  const {target:request,label}=this.b.navigationRequest;
+  this.walkingLabel=label;
   this.b.navigationRequest=null;
   this.followingResident=typeof request==='string'?request:null;
   this.nextFollowUpdate=0;
   this.playerRoute=typeof request==='string'?[]:findRoute(p,request);
-  this.destination=typeof request!=='string'&&this.playerRoute.length?request:null;
+  this.destination=this.playerRoute.at(-1)??null;
  }
  if(this.followingResident){
   const resident=this.b.world.residents.find(person=>person.id===this.followingResident);
   if(!resident||Math.hypot(resident.x-p.x,resident.y-p.y)<=44){
-   this.followingResident=null;
+   if(resident&&this.walkingLabel)this.b.onArrival(this.walkingLabel);
+   this.followingResident=null;this.walkingLabel=null;
    this.playerRoute=[];
   }else if(tick>=this.nextFollowUpdate){
    this.nextFollowUpdate=tick+450;
    const destination={x:resident.x,y:resident.y};
    this.playerRoute=findRoute(p,destination);
-   this.destination=this.playerRoute.length?destination:null;
+   this.destination=this.playerRoute.at(-1)??null;
   }
  }
  const dx=Number(this.keys.D.isDown||this.keys.RIGHT.isDown)-Number(this.keys.A.isDown||this.keys.LEFT.isDown)+this.b.direction.x;
  const dy=Number(this.keys.S.isDown||this.keys.DOWN.isDown)-Number(this.keys.W.isDown||this.keys.UP.isDown)+this.b.direction.y;
  let moving=false;
  if(dx||dy){
- this.destination=null;this.playerRoute=[];this.followingResident=null;
+ this.destination=null;this.playerRoute=[];this.followingResident=null;this.walkingLabel=null;
  const d=Math.hypot(dx,dy),nx=p.x+dx/d*seconds*72,ny=p.y+dy/d*seconds*72;
  if(clearSegment(p,{x:nx,y:ny})){p.x=nx;p.y=ny;moving=true;}
  else if(dx&&clearSegment(p,{x:nx,y:p.y})){p.x=nx;moving=true;}
  else if(dy&&clearSegment(p,{x:p.x,y:ny})){p.y=ny;moving=true;}
  }else moving=followRoute(p,this.playerRoute,seconds*72);
- if(!this.playerRoute.length)this.destination=null;
+ if(!this.playerRoute.length){
+  if(!this.followingResident&&this.walkingLabel){
+   if(this.destination&&Math.hypot(p.x-this.destination.x,p.y-this.destination.y)<1)
+    this.b.onArrival(this.walkingLabel);
+   this.walkingLabel=null;
+  }
+  this.destination=null;
+ }
  if(this.destination){
  this.trail.lineStyle(1,0xf1dfab,.45).beginPath().moveTo(p.x,p.y);
  for(const point of this.playerRoute)this.trail.lineTo(point.x,point.y);
@@ -95,6 +105,7 @@ export class Island extends Phaser.Scene{
  }
  this.animateActor('player',p,moving,t);
  }else this.animateActor('player',p,false,t);
+ this.b.walkingLabel=this.walkingLabel;
  this.b.walkingAutomatically=this.b.mode==='inhabitant'&&(this.playerRoute.length>0||this.followingResident!==null);
  const h=this.b.world.minute/60,night=h<5||h>21?.56:h<7?.56*(7-h)/2:h>17?.56*(h-17)/4:0;this.shade.setAlpha(night);this.glow.clear();if(night>0){for(const [x,y]of [[386,299],[533,332],[565,201],[356,415],[285,379],[335,379],[540,371],[590,371],[568,152],[618,152],[819,88]])for(let radius=22;radius>0;radius-=3)this.glow.fillStyle(0xffd38a,.009*night/.56).fillCircle(x,y,radius);for(let i=0;i<20;i++){const x=230+i*23,y=230+Math.sin(i*9+t*.0003)*90;this.glow.fillStyle(0xe6edab,.4+.3*Math.sin(t*.003+i)).fillRect(x,y,2,2);}}
  }
