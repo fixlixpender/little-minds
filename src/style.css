@@ -41,3 +41,5 @@
 .journal-filters input{flex:1 1 110px;width:100%}
 .journal-filters select{flex:1 1 85px;max-width:100%}
 .journal-filters input::placeholder{color:#9bb0a3}
+
+.journal-star{margin-inline-start:auto;flex:none;align-self:start;display:grid;place-items:center;width:28px;height:28px;border-radius:4px;color:#adbca7}.journal-star:hover,.journal-star[aria-pressed=true]{color:#e8cc88}.journal-star:focus-visible{outline:2px solid #e8cc88}.diary .tabs{flex-wrap:wrap}
