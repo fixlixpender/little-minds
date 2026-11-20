@@ -30,6 +30,13 @@ export function Workshop({language,onClose}:{language:Language;onClose:()=>void}
   return <dialog ref={dialog} className="character-dialog workshop" aria-labelledby="workshop-title"
     onCancel={event=>{event.preventDefault();onClose()}}
     onKeyDown={event=>{
+      if(event.ctrlKey||event.metaKey||event.altKey)return;
+      if(event.key.toLowerCase()==='i'){
+        if(station&&!event.repeat)setDetail(station.detail);
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       const direction:Record<string,[number,number]>={arrowup:[0,-1],w:[0,-1],arrowdown:[0,1],s:[0,1],arrowleft:[-1,0],a:[-1,0],arrowright:[1,0],d:[1,0]};
       const step=direction[event.key.toLowerCase()];
       if(!step)return;

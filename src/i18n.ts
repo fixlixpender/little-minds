@@ -6,6 +6,7 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
+ 'Entrar na oficina junto à porta ou examinar um objeto lá dentro':'Enter the workshop at the door or inspect an object inside',
  'Entrar na oficina':'Enter workshop','Sair da oficina':'Leave workshop',
  'Bancada':'Workbench','Maquete do barco':'Model boat','Examinar':'Inspect',
  'Limas, alicates e parafusos, todos separados por tamanho.':'Files, pliers and screws, all sorted by size.',

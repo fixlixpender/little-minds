@@ -155,6 +155,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    case 'o': changeMode('observer'); break;
    case 'h': changeMode('inhabitant'); break;
    case 'b': toggleBench(); break;
+   case 'i': enterWorkshop(); break;
    case 'f': inspectLighthouse(); break;
    case 'x': if(mode==='inhabitant')stopWalking(); break;
    case 'p': pause(value=>!value); break;
@@ -220,6 +221,8 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    <div><dt><kbd>H</kbd></dt><dd>{tr('Habitante')}</dd></div>
    <div><dt><kbd>B</kbd></dt><dd>{tr('Sentar ou levantar junto a um banco')}</dd></div>
    <div><dt><kbd>F</kbd></dt><dd>{tr('Examinar as marcas junto ao farol')}</dd></div>
+   <div><dt><kbd>I</kbd></dt><dd>{tr('Entrar na oficina junto à porta ou examinar um objeto lá dentro')}</dd></div>
+   <div><dt><kbd>Esc</kbd></dt><dd>{tr('Sair da oficina')}</dd></div>
    <div><dt><kbd>X</kbd></dt><dd>{tr('Parar caminhada')}</dd></div>
    <div><dt><kbd>P</kbd></dt><dd>{tr('Pausar ou retomar')}</dd></div>
    <div><dt><kbd>M</kbd></dt><dd>{tr('Ampliar ou reduzir o mapa')}</dd></div>
