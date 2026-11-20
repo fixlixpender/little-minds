@@ -11,7 +11,7 @@ const placeLabels: Record<Place,string> = {
  praca:'Praça', horta:'Horta comunitária', floresta:'Floresta', lago:'Lago',
  cais:'Cais', farol:'Farol', mira:'Casa da Mira', theo:'Oficina do Theo', luma:'Casa da Luma',
 };
-const walkingDestinations = ['praca','horta','floresta','lago','cais','farol'] as const satisfies readonly Place[];
+const walkingDestinations = ['praca','horta','floresta','lago','cais','farol','theo'] as const satisfies readonly Place[];
 type WalkingDestination = (typeof walkingDestinations)[number];
 
 const journalResidents = ['mira','theo','luma'] as const;
@@ -106,9 +106,10 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
     !(entry.kind==='social'&&entry.text.includes(profiles[journalResident].name)))return false;
   return !query||journalSearchKey(eventText(entry,language)).includes(query);
  });
+ const nearWorkshop=Math.hypot(w.player.x-places.theo.x,w.player.y-places.theo.y)<=35;
  function enterWorkshop(){
   if(mode!=='inhabitant'||!bridge.current.inputEnabled||
-     Math.hypot(w.player.x-places.theo.x,w.player.y-places.theo.y)>35)return;
+     !nearWorkshop)return;
   bridge.current.direction={x:0,y:0};
   bridge.current.cancelNavigation=true;
   bridge.current.sitting=false;
@@ -169,7 +170,9 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   {bridge.current.walkingLabel
    ?tr('A caminhar para {destino}').replace('{destino}',tr(bridge.current.walkingLabel))
    :tr('Chegaste: {destino}').replace('{destino}',tr(arrival!.label))}
- </span>}<div className="map-caption"><Compass size={14}/><span>{tr('ILHA AURORA')}</span><span className="coordinates">{tr('38° N · 27° W')}</span></div><div className="map-weather">{weatherAt(w.day,w.minute)==='rain'?<CloudRain size={14}/>:weatherAt(w.day,w.minute)==='mist'?<CloudFog size={14}/>:<CloudSun size={14}/>}<span>{tr(weatherLabels[weatherAt(w.day,w.minute)])}</span></div>{notice&&<div role="status" className="speech">{tr(notice)}</div>}{mode==='inhabitant'&&<>{nearLighthouse(w)&&<button className="talk-button inspect-map" onClick={inspectLighthouse}><Sparkles size={14}/>{tr(w.lighthouseClueFound?'Reler a inscrição':'Examinar as marcas')}</button>}<div className="dpad">{[['up',0,-1,ChevronUp],['left',-1,0,ChevronLeft],['down',0,1,ChevronDown],['right',1,0,ChevronRight]].map(([name,x,y,Icon])=>{const I=Icon as typeof ChevronUp;return <button key={String(name)} className={String(name)} aria-label={tr(`Mover ${name}`)} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);bridge.current.direction={x:Number(x),y:Number(y)}}} onPointerUp={()=>bridge.current.direction={x:0,y:0}} onPointerCancel={()=>bridge.current.direction={x:0,y:0}}><I size={18}/></button>})}</div><button className="talk-button" onClick={()=>interact()}><MessageCircle size={16}/>{tr('Conversar')}</button></>}</div>
+ </span>}<div className="map-caption"><Compass size={14}/><span>{tr('ILHA AURORA')}</span><span className="coordinates">{tr('38° N · 27° W')}</span></div><div className="map-weather">{weatherAt(w.day,w.minute)==='rain'?<CloudRain size={14}/>:weatherAt(w.day,w.minute)==='mist'?<CloudFog size={14}/>:<CloudSun size={14}/>}<span>{tr(weatherLabels[weatherAt(w.day,w.minute)])}</span></div>{notice&&<div role="status" className="speech">{tr(notice)}</div>}{mode==='inhabitant'&&<>{nearWorkshop&&<button type="button" className="talk-button inspect-map" onClick={enterWorkshop}>
+  {tr('Entrar na oficina')}
+ </button>}{nearLighthouse(w)&&<button className="talk-button inspect-map" onClick={inspectLighthouse}><Sparkles size={14}/>{tr(w.lighthouseClueFound?'Reler a inscrição':'Examinar as marcas')}</button>}<div className="dpad">{[['up',0,-1,ChevronUp],['left',-1,0,ChevronLeft],['down',0,1,ChevronDown],['right',1,0,ChevronRight]].map(([name,x,y,Icon])=>{const I=Icon as typeof ChevronUp;return <button key={String(name)} className={String(name)} aria-label={tr(`Mover ${name}`)} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);bridge.current.direction={x:Number(x),y:Number(y)}}} onPointerUp={()=>bridge.current.direction={x:0,y:0}} onPointerCancel={()=>bridge.current.direction={x:0,y:0}}><I size={18}/></button>})}</div><button className="talk-button" onClick={()=>interact()}><MessageCircle size={16}/>{tr('Conversar')}</button></>}</div>
  {mode==='observer'&&r&&profile&&<div className="map-tracking">
   <MapPin size={15} aria-hidden="true"/>
   <div className="map-tracking-text">
@@ -252,7 +255,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    </div>
   </div>
  </section>
- {mode==='inhabitant'&&Math.hypot(w.player.x-places.theo.x,w.player.y-places.theo.y)<=35&&
+ {mode==='inhabitant'&&nearWorkshop&&
   <div className="map-tracking"><button type="button" className="resident-route-toggle" onClick={enterWorkshop}>
    {tr('Entrar na oficina')}
   </button></div>}
