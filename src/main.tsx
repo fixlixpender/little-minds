@@ -1,3 +1,4 @@
+import {Workshop} from './Workshop';
 import {ambientMix, createAmbientAudio} from './ambientAudio';
 import {ALBUM_LIMIT,loadAlbum,saveAlbum,type IslandPhoto} from './album';
 import {discoverLighthouseClue, lighthouseClue, nearLighthouse} from './lighthouse';
@@ -25,7 +26,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    if(stored!==null&&Number.isFinite(Number(stored)))return Math.max(0,Math.min(100,Number(stored)));
   }catch{}
   return 100;
- });const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const ambientAudio=useRef<ReturnType<typeof createAmbientAudio>|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
+ });const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[workshopOpen,setWorkshopOpen]=useState(false);const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const ambientAudio=useRef<ReturnType<typeof createAmbientAudio>|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!workshopOpen&&!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
  function persist(){try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}}
  function updateAlbum(next:IslandPhoto[]){
   try{
@@ -57,7 +58,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   },'image/png');
  }
  function interact(target?:PersonId){if(editorOpen||conversation)return;const w=world.current;const nearest=target?w.residents.find(r=>r.id===target)!:[...w.residents].sort((a,b)=>Math.hypot(a.x-w.player.x,a.y-w.player.y)-Math.hypot(b.x-w.player.x,b.y-w.player.y))[0];if(Math.hypot(nearest.x-w.player.x,nearest.y-w.player.y)>70){setNotice('Aproxima-te de um habitante para conversar.');return;}select(nearest.id);setNotice('');bridge.current.direction={x:0,y:0};setConversation(nearest.id);}
- Object.assign(bridge.current,{mode,selected,showResidentRoute,paused:paused||editorOpen||conversation!==null,speed,language,inputEnabled:!editorOpen&&!conversation,onInteract:()=>interact()});
+ Object.assign(bridge.current,{mode,selected,showResidentRoute,paused:paused||workshopOpen||editorOpen||conversation!==null,speed,language,inputEnabled:!workshopOpen&&!editorOpen&&!conversation,onInteract:()=>interact()});
  useEffect(()=>{
   try{localStorage.setItem('little-minds:expanded-map',String(wideMap))}catch{}
  },[wideMap]);
@@ -105,6 +106,14 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
     !(entry.kind==='social'&&entry.text.includes(profiles[journalResident].name)))return false;
   return !query||journalSearchKey(eventText(entry,language)).includes(query);
  });
+ function enterWorkshop(){
+  if(mode!=='inhabitant'||!bridge.current.inputEnabled||
+     Math.hypot(w.player.x-places.theo.x,w.player.y-places.theo.y)>35)return;
+  bridge.current.direction={x:0,y:0};
+  bridge.current.cancelNavigation=true;
+  bridge.current.sitting=false;
+  setWorkshopOpen(true);
+ }
  function toggleBench(){
   if(mode!=='inhabitant'||!bridge.current.inputEnabled)return;
   if(!bridge.current.sitting&&!nearbyBench(world.current.player))return;
@@ -243,6 +252,10 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    </div>
   </div>
  </section>
+ {mode==='inhabitant'&&Math.hypot(w.player.x-places.theo.x,w.player.y-places.theo.y)<=35&&
+  <div className="map-tracking"><button type="button" className="resident-route-toggle" onClick={enterWorkshop}>
+   {tr('Entrar na oficina')}
+  </button></div>}
  <ActivityPanel world={w} language={language} onGo={()=>{if(w.sharedActivity){setMode('inhabitant');bridge.current.navigationRequest={target:places[activities[w.sharedActivity.task].place],label:placeLabels[activities[w.sharedActivity.task].place]};}}} onCancel={()=>{cancelActivity(w);persist();render(n=>n+1)}}/>
  <div className="residents-heading"><h2>{tr('Os habitantes')}</h2><span>{tr('3 vidas a cruzarem-se')}</span></div><div className="resident-grid">{(Object.keys(profiles)as PersonId[]).map(id=>{const p=profiles[id],resident=w.residents.find(r=>r.id===id)!;return <button className={`resident-card ${selected===id?'selected':''}`} key={id} onClick={()=>select(id)}><span className={`portrait ${id}`}><span className="pixel-person"/></span><span className="resident-info"><strong>{p.name}<span className="status-dot"/></strong><small>{tr(p.role)}</small><span className="activity">{tr(resident.activity)}</span></span><ChevronRight size={15}/></button>})}</div>
  {mode==='inhabitant'&&<section className="shared-activity">
@@ -264,6 +277,6 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  {profile&&r&&<section className="profile"><div className="profile-top"><span className={`portrait small ${selected}`}><span className="pixel-person"/></span><div><h3>{profile.name}</h3><span>{tr(profile.role)}</span></div>{selected==='mira'?<Leaf size={19}/>:selected==='theo'?<Sparkles size={19}/>:<Telescope size={19}/>}</div><p className="quote">“{tr(profile.quote)}”</p><div className="traits">{tr(profile.traits)}</div><div className="energy-label"><span>{tr('Energia')}</span><span>{Math.round(r.energy)}%</span></div><div className="energy"><i style={{width:`${r.energy}%`,background:profile.color}}/></div><div className="relationships">{w.residents.filter(other=>other.id!==selected).map(other=><span key={other.id}>{profiles[other.id].name}<b>{w.relationships[[selected!,other.id].sort().join('-')]||20}<small>/100</small></b></span>)}</div><div className="player-bond"><div className="bond-heading"><span>{tr('Laço contigo')}</span><strong>{tr(bondLabel(w.playerBonds[selected!].affinity))} · {w.playerBonds[selected!].affinity}/100</strong></div><div className="energy"><i style={{width:`${w.playerBonds[selected!].affinity}%`,background:profile.color}}/></div></div>{mode==='inhabitant'&&<button className="profile-action" onClick={()=>{bridge.current.navigationRequest={target:r.id,label:profile.name}}}>
   {tr('Caminhar até ao habitante')}<Footprints size={14} aria-hidden="true"/>
  </button>}{mode==='inhabitant'&&<button className="profile-action" onClick={()=>interact(selected!)}>{tr('Conversar por perto')}<ArrowUpRight size={14}/></button>}</section>}
- </aside></div><footer><span>✦ <b>{tr('Little Minds')}</b> <span>{tr('Um lugar para simplesmente existir.')}</span></span><span className={saved?'save':'save failed'}><Check size={12}/>{tr(saved?'Progresso guardado neste dispositivo':'Não foi possível guardar neste navegador')}</span></footer></main>{editorOpen&&<CharacterEditor profile={w.playerProfile} language={language} onSave={saveCharacter} onClose={()=>setEditorOpen(false)}/>}{conversation&&<Conversation world={w} id={conversation} language={language} onClose={()=>setConversation(null)} onActivity={arrange} onChange={()=>{persist();render(n=>n+1)}}/>}</div>
+ </aside></div><footer><span>✦ <b>{tr('Little Minds')}</b> <span>{tr('Um lugar para simplesmente existir.')}</span></span><span className={saved?'save':'save failed'}><Check size={12}/>{tr(saved?'Progresso guardado neste dispositivo':'Não foi possível guardar neste navegador')}</span></footer></main>{workshopOpen&&<Workshop language={language} onClose={()=>setWorkshopOpen(false)}/>}{editorOpen&&<CharacterEditor profile={w.playerProfile} language={language} onSave={saveCharacter} onClose={()=>setEditorOpen(false)}/>}{conversation&&<Conversation world={w} id={conversation} language={language} onClose={()=>setConversation(null)} onActivity={arrange} onChange={()=>{persist();render(n=>n+1)}}/>}</div>
 }
 createRoot(document.getElementById('root')!).render(<App/>);
