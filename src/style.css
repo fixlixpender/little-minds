@@ -59,3 +59,6 @@
 .keyboard-guide dl div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
 .keyboard-guide dd{margin:0}
 .keyboard-guide kbd{padding:2px 5px;border:1px solid #ffffff32;border-radius:3px;background:#102321}
+
+.ambient-volume{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:10px}
+.ambient-volume input{flex:1;min-width:90px;accent-color:#b7cb98}

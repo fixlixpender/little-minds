@@ -17,7 +17,14 @@ function journalSearchKey(text:string){
  return text.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
 }
 
-function App(){const[language,setLanguage]=useState<Language>(()=>{try{return readLanguage(localStorage)}catch{return 'en'}});const tr=(text:string)=>t(text,language);const[initialWorld]=useState(()=>{try{return restore(localStorage.getItem(SAVE_KEY))}catch{return restore(null)}});const world=useRef(initialWorld);const[,render]=useState(0);const[mode,setMode]=useState<'observer'|'inhabitant'>('observer');const[selected,select]=useState<PersonId|null>('mira');const[paused,pause]=useState(false);const[walkingDestination,setWalkingDestination]=useState<WalkingDestination>("praca");const[showResidentRoute,setShowResidentRoute]=useState(false);const[wideMap,setWideMap]=useState(()=>{try{return localStorage.getItem('little-minds:expanded-map')==='true'}catch{return false}});const[speed,speedSet]=useState(1);const[tab,setTab]=useState('life');const[journalQuery,setJournalQuery]=useState('');const[journalResident,setJournalResident]=useState<PersonId|''>('');const[saved,setSaved]=useState(true);const[sound,setSound]=useState(false);const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
+function App(){const[language,setLanguage]=useState<Language>(()=>{try{return readLanguage(localStorage)}catch{return 'en'}});const tr=(text:string)=>t(text,language);const[initialWorld]=useState(()=>{try{return restore(localStorage.getItem(SAVE_KEY))}catch{return restore(null)}});const world=useRef(initialWorld);const[,render]=useState(0);const[mode,setMode]=useState<'observer'|'inhabitant'>('observer');const[selected,select]=useState<PersonId|null>('mira');const[paused,pause]=useState(false);const[walkingDestination,setWalkingDestination]=useState<WalkingDestination>("praca");const[showResidentRoute,setShowResidentRoute]=useState(false);const[wideMap,setWideMap]=useState(()=>{try{return localStorage.getItem('little-minds:expanded-map')==='true'}catch{return false}});const[speed,speedSet]=useState(1);const[tab,setTab]=useState('life');const[journalQuery,setJournalQuery]=useState('');const[journalResident,setJournalResident]=useState<PersonId|''>('');const[saved,setSaved]=useState(true);const[sound,setSound]=useState(false);
+ const[ambientVolume,setAmbientVolume]=useState(()=>{
+  try{
+   const stored=localStorage.getItem('little-minds:ambient-volume');
+   if(stored!==null&&Number.isFinite(Number(stored)))return Math.max(0,Math.min(100,Number(stored)));
+  }catch{}
+  return 100;
+ });const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const ambientGain=useRef<GainNode|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
  function persist(){try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}}
  function updateAlbum(next:IslandPhoto[]){
   try{
@@ -61,7 +68,12 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   return()=>clearTimeout(timeout);
  },[arrival]);
  useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),8000);return()=>clearTimeout(t)},[notice]);
- async function toggleSound(){if(sound){await audio.current?.suspend();setSound(false);return;}if(!audio.current){const ctx=new AudioContext();audio.current=ctx;const length=ctx.sampleRate*3,buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<length;i++){last=(last+Math.random()*.04-.02)/1.02;data[i]=last;}const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;const gain=ctx.createGain();gain.gain.value=.18;const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=650;source.connect(filter).connect(gain).connect(ctx.destination);source.start();}await audio.current.resume();setSound(true);}
+ useEffect(()=>{
+  try{localStorage.setItem('little-minds:ambient-volume',String(ambientVolume))}catch{}
+  const gain=ambientGain.current;
+  if(gain)gain.gain.setTargetAtTime(.18*ambientVolume/100,gain.context.currentTime,.04);
+ },[ambientVolume]);
+ async function toggleSound(){if(sound){await audio.current?.suspend();setSound(false);return;}if(!audio.current){const ctx=new AudioContext();audio.current=ctx;const length=ctx.sampleRate*3,buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<length;i++){last=(last+Math.random()*.04-.02)/1.02;data[i]=last;}const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;const gain=ctx.createGain();ambientGain.current=gain;gain.gain.value=.18*ambientVolume/100;const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=650;source.connect(filter).connect(gain).connect(ctx.destination);source.start();}await audio.current.resume();setSound(true);}
  const w=world.current,h=w.minute/60,night=h<6||h>=20;const r=w.residents.find(r=>r.id===selected);const profile=selected?profiles[selected]:null;const query=journalSearchKey(journalQuery.trim());
  const favorites=w.favoriteEntries??[];
  const favoriteIds=new Set(favorites.map(entry=>entry.id));
@@ -180,6 +192,16 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    <div><dt><kbd>M</kbd></dt><dd>{tr('Ampliar ou reduzir o mapa')}</dd></div>
    <div><dt><kbd>C</kbd></dt><dd>{tr('Tirar fotografia')}</dd></div>
   </dl>
+ </details>
+ <details className="keyboard-guide">
+  <summary>{tr('Definições de áudio')}</summary>
+  <label className="ambient-volume">
+   <span>{tr('Volume do som ambiente')}</span>
+   <input type="range" min="0" max="100" value={ambientVolume}
+    onKeyDown={event=>event.stopPropagation()}
+    onChange={event=>setAmbientVolume(event.currentTarget.valueAsNumber)}/>
+   <span aria-hidden="true">{ambientVolume}%</span>
+  </label>
  </details>
  <section className="map-album">
   <button type="button" className="resident-route-toggle" aria-expanded={albumOpen}
