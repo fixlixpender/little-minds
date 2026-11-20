@@ -1,3 +1,4 @@
+import {ambientMix, createAmbientAudio} from './ambientAudio';
 import {ALBUM_LIMIT,loadAlbum,saveAlbum,type IslandPhoto} from './album';
 import {discoverLighthouseClue, lighthouseClue, nearLighthouse} from './lighthouse';
 import{weatherAt,weatherLabels}from './weather';
@@ -24,7 +25,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    if(stored!==null&&Number.isFinite(Number(stored)))return Math.max(0,Math.min(100,Number(stored)));
   }catch{}
   return 100;
- });const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const ambientGain=useRef<GainNode|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
+ });const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const ambientAudio=useRef<ReturnType<typeof createAmbientAudio>|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
  function persist(){try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}}
  function updateAlbum(next:IslandPhoto[]){
   try{
@@ -70,10 +71,30 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),8000);return()=>clearTimeout(t)},[notice]);
  useEffect(()=>{
   try{localStorage.setItem('little-minds:ambient-volume',String(ambientVolume))}catch{}
-  const gain=ambientGain.current;
-  if(gain)gain.gain.setTargetAtTime(.18*ambientVolume/100,gain.context.currentTime,.04);
+  const gain=ambientAudio.current?.master;
+  if(gain&&audio.current)gain.setTargetAtTime(.18*ambientVolume/100,audio.current.currentTime,.04);
  },[ambientVolume]);
- async function toggleSound(){if(sound){await audio.current?.suspend();setSound(false);return;}if(!audio.current){const ctx=new AudioContext();audio.current=ctx;const length=ctx.sampleRate*3,buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<length;i++){last=(last+Math.random()*.04-.02)/1.02;data[i]=last;}const source=ctx.createBufferSource();source.buffer=buffer;source.loop=true;const gain=ctx.createGain();ambientGain.current=gain;gain.gain.value=.18*ambientVolume/100;const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=650;source.connect(filter).connect(gain).connect(ctx.destination);source.start();}await audio.current.resume();setSound(true);}
+ const mix=ambientMix(world.current.day,world.current.minute);
+ useEffect(()=>{
+  const tracks=ambientAudio.current;
+  if(!tracks||!audio.current||!sound)return;
+  tracks.sea.setTargetAtTime(mix.sea,audio.current.currentTime,.25);
+  tracks.rain.setTargetAtTime(mix.rain,audio.current.currentTime,.25);
+ },[mix.sea,mix.rain,sound]);
+ async function toggleSound(){
+  if(sound){await audio.current?.suspend();setSound(false);return;}
+  if(!audio.current){
+   const context=new AudioContext();
+   const tracks=createAmbientAudio(context);
+   tracks.master.value=.18*ambientVolume/100;
+   tracks.sea.value=mix.sea;
+   tracks.rain.value=mix.rain;
+   audio.current=context;
+   ambientAudio.current=tracks;
+  }
+  await audio.current.resume();
+  setSound(true);
+ }
  const w=world.current,h=w.minute/60,night=h<6||h>=20;const r=w.residents.find(r=>r.id===selected);const profile=selected?profiles[selected]:null;const query=journalSearchKey(journalQuery.trim());
  const favorites=w.favoriteEntries??[];
  const favoriteIds=new Set(favorites.map(entry=>entry.id));
