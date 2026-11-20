@@ -49,9 +49,17 @@ export function Workshop({language,onClose}:{language:Language;onClose:()=>void}
         <button key={label} type="button" className="resident-route-toggle" aria-label={tr(label)} onClick={()=>move(x,y)}>{arrow}</button>)}
       <button type="button" className="resident-route-toggle" onClick={onClose}>{tr('Sair da oficina')}</button>
     </div>
-    {station&&<button type="button" className="resident-route-toggle" onClick={()=>setDetail(station.detail)}>
-      {tr('Examinar')}: {tr(station.label)}
-    </button>}
-    <p role="status">{detail&&tr(detail)}</p>
+    <div className="workshop-inspection">
+      {stations.map(item=><button key={item.style} type="button"
+        className="resident-route-toggle" disabled={station!==item}
+        style={{visibility:station===item?'visible':'hidden'}}
+        onClick={()=>setDetail(item.detail)}>
+        {tr('Examinar')}: {tr(item.label)}
+      </button>)}
+    </div>
+    <div className="workshop-inspection">
+      {stations.map(item=><p key={item.style} aria-hidden="true" className="workshop-detail-placeholder">{tr(item.detail)}</p>)}
+      <p role="status">{detail&&tr(detail)}</p>
+    </div>
   </dialog>;
 }

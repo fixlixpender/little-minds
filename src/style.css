@@ -76,3 +76,8 @@
 .workshop-player{justify-self:center;align-self:center;width:12px;height:18px;background:linear-gradient(#493b33 0 22%,#e1b48e 22% 49%,#779a72 49% 82%,#3e514b 82%);box-shadow:2px 2px #513c31}
 .workshop-actions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .workshop p{font-size:12px;line-height:1.5}
+
+/* Reserve the tallest inspection content so the centered room never jumps. */
+.workshop-inspection{display:grid;justify-items:start}
+.workshop-inspection>*{grid-area:1/1}
+.workshop-detail-placeholder{visibility:hidden}
