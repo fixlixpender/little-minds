@@ -23,7 +23,7 @@ const translations: Record<string, string> = {
   'Esta muda já foi regada hoje.':'This seedling has already been watered today.',
   'A planta já floresceu.':'The plant has already bloomed.',
 
- 'Entrar num interior ou interagir com um objeto próximo':'Enter an interior or interact with a nearby object',
+ 'Entrar junto à porta, mesmo sem foco no mapa, ou interagir lá dentro':'Enter at the door without focusing the map, or interact inside',
  'Entrar na oficina':'Enter workshop','Sair da oficina':'Leave workshop',
  'Bancada':'Workbench','Maquete do barco':'Model boat','Examinar':'Inspect',
  'Limas, alicates e parafusos, todos separados por tamanho.':'Files, pliers and screws, all sorted by size.',
