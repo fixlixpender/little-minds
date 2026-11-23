@@ -1,6 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
 import {t, type Language} from './i18n';
 
+const exitTile = {x:4,y:4};
+
 const workshopStations = [
   {x:2,y:1,style:'bench',label:'Bancada',detail:'Limas, alicates e parafusos, todos separados por tamanho.'},
   {x:6,y:1,style:'model',label:'Maquete do barco',detail:'O casco é de madeira e a vela é um retalho de pano azul.'},
@@ -18,9 +20,10 @@ export function Workshop({language,onClose,nursery}:{language:Language;onClose:(
   const stations=nursery?nurseryStations:workshopStations;
   const [machineOn,setMachineOn]=useState(false);
   const dialog=useRef<HTMLDialogElement>(null);
-  const [position,setPosition]=useState({x:4,y:4});
+  const [position,setPosition]=useState(exitTile);
   const [detail,setDetail]=useState('');
   const tr=(label:string)=>t(label,language);
+  const nearExit=position.x===exitTile.x&&(position.y===exitTile.y||position.y===exitTile.y-1);
   const station=stations.find(item=>Math.abs(item.x-position.x)+Math.abs(item.y-position.y)===1);
 
   useEffect(()=>{
@@ -51,7 +54,10 @@ export function Workshop({language,onClose,nursery}:{language:Language;onClose:(
     onKeyDown={event=>{
       if(event.ctrlKey||event.metaKey||event.altKey)return;
       if(event.key.toLowerCase()==='i'){
-        if(station&&!event.repeat)interact(station);
+        if(!event.repeat){
+          if(nearExit)onClose();
+          else if(station)interact(station);
+        }
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -66,10 +72,10 @@ export function Workshop({language,onClose,nursery}:{language:Language;onClose:(
     <h2 id="workshop-title">{tr(nursery?'Viveiro da Mira':'Oficina do Theo')}</h2>
     <div className={nursery?"workshop-room nursery-room":"workshop-room"} aria-hidden="true">
       {stations.map(item=><div key={item.style} className={`workshop-prop ${item.style}${item.style==='machine'&&machineOn?' running':''}`} style={{gridColumn:item.x+1,gridRow:item.y+1}} data-stage={item.style==='plant'?nursery?.stage:undefined}/>)}
-      <div className="workshop-door"/>
+      <div className="workshop-door" style={{gridColumn:exitTile.x+1,gridRow:exitTile.y+1}}/>
       <div className="workshop-player" style={{gridColumn:position.x+1,gridRow:position.y+1}}/>
     </div>
-    <p>{tr('Usa WASD, as setas ou os botões para explorar. Aproxima-te de um objeto para o examinar.')}</p>
+    <p>{tr('Usa WASD, as setas ou os botões para explorar. Junto à porta, prime I para sair.')}</p>
     <div className="workshop-actions">
       {([['Mover up','↑',0,-1],['Mover left','←',-1,0],['Mover down','↓',0,1],['Mover right','→',1,0]] as const).map(([label,arrow,x,y])=>
         <button key={label} type="button" className="resident-route-toggle" aria-label={tr(label)} onClick={()=>move(x,y)}>{arrow}</button>)}

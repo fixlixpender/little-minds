@@ -246,7 +246,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    <div><dt><kbd>H</kbd></dt><dd>{tr('Habitante')}</dd></div>
    <div><dt><kbd>B</kbd></dt><dd>{tr('Sentar ou levantar junto a um banco')}</dd></div>
    <div><dt><kbd>F</kbd></dt><dd>{tr('Examinar as marcas junto ao farol')}</dd></div>
-   <div><dt><kbd>I</kbd></dt><dd>{tr('Entrar junto à porta, mesmo sem foco no mapa, ou interagir lá dentro')}</dd></div>
+   <div><dt><kbd>I</kbd></dt><dd>{tr('Entrar ou sair junto à porta, ou interagir com objetos')}</dd></div>
    <div><dt><kbd>Esc</kbd></dt><dd>{tr('Sair da oficina')}</dd></div>
    <div><dt><kbd>X</kbd></dt><dd>{tr('Parar caminhada')}</dd></div>
    <div><dt><kbd>P</kbd></dt><dd>{tr('Pausar ou retomar')}</dd></div>
