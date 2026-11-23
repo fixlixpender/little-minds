@@ -1,3 +1,5 @@
+export const nurseryDoor = {x:364,y:304};
+
 export type Nursery = {waterings:number; lastWateredDay:number};
 
 export function waterNursery(day:number, plant?:Nursery):Nursery|undefined {

@@ -1,4 +1,4 @@
-import {nurseryStage,waterNursery} from './nursery';
+import {nurseryDoor,nurseryStage,waterNursery} from './nursery';
 import {Workshop} from './Workshop';
 import {ambientMix, createAmbientAudio} from './ambientAudio';
 import {ALBUM_LIMIT,loadAlbum,saveAlbum,type IslandPhoto} from './album';
@@ -7,17 +7,21 @@ import{weatherAt,weatherLabels}from './weather';
 import {ActivityPanel,CommunityPanel} from './SharedActivities';import {startActivity,tickActivity,cancelActivity} from './activities';import {activities,type TaskId} from './activityState';import {places,type Place} from './simulation';
 import {Conversation} from './Conversation';import {bondLabel,eventText} from './conversations';
 import {CharacterEditor} from './CharacterEditor';import {normalizeAvatar,type AvatarProfile} from './avatar';
-import React,{useEffect,useRef,useState}from'react';import{createRoot}from'react-dom/client';import Phaser from'phaser';import{Eye,Footprints,Pause,Play,Sun,Moon,CloudSun,CloudRain,CloudFog,Maximize,Minimize,MapPin,Camera,Star,BookOpen,ArrowUpRight,Compass,ChevronRight,MessageCircle,Leaf,Sparkles,Telescope,Volume2,VolumeX,UserRound,Check,ChevronUp,ChevronDown,ChevronLeft}from'lucide-react';import{Island,nearbyBench,type Bridge}from'./Island';import{advance,restore,serialize,toggleFavoriteEntry,SAVE_KEY,profiles,timeLabel,type PersonId}from'./simulation';import {t,readLanguage,LANGUAGE_KEY,type Language} from './i18n';import './style.css';
-const placeLabels: Record<Place,string> = {
- praca:'Praça', horta:'Horta comunitária', floresta:'Floresta', lago:'Lago',
+import React,{useCallback,useEffect,useRef,useState}from'react';import{createRoot}from'react-dom/client';import Phaser from'phaser';import{Eye,Footprints,Pause,Play,Sun,Moon,CloudSun,CloudRain,CloudFog,Maximize,Minimize,MapPin,Camera,Star,BookOpen,ArrowUpRight,Compass,ChevronRight,MessageCircle,Leaf,Sparkles,Telescope,Volume2,VolumeX,UserRound,Check,ChevronUp,ChevronDown,ChevronLeft}from'lucide-react';import{Island,nearbyBench,type Bridge}from'./Island';import{advance,restore,serialize,toggleFavoriteEntry,SAVE_KEY,profiles,timeLabel,type PersonId}from'./simulation';import {t,readLanguage,LANGUAGE_KEY,type Language} from './i18n';import './style.css';
+const placeLabels: Record<Place|'nursery',string> = {
+ nursery:'Viveiro da Mira',praca:'Praça', horta:'Horta comunitária', floresta:'Floresta', lago:'Lago',
  cais:'Cais', farol:'Farol', mira:'Casa da Mira', theo:'Oficina do Theo', luma:'Casa da Luma',
 };
-const walkingDestinations = ['praca','horta','floresta','lago','cais','farol','theo'] as const satisfies readonly Place[];
+const walkingDestinations = ['praca','horta','floresta','lago','cais','farol','theo','nursery'] as const satisfies readonly (Place|'nursery')[];
 type WalkingDestination = (typeof walkingDestinations)[number];
 
 const journalResidents = ['mira','theo','luma'] as const;
 function journalSearchKey(text:string){
  return text.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
+}
+
+function nearEntrance(player:{x:number;y:number},door:{x:number;y:number},radius:number){
+ return Math.hypot(player.x-door.x,player.y-door.y)<=radius;
 }
 
 function App(){const[language,setLanguage]=useState<Language>(()=>{try{return readLanguage(localStorage)}catch{return 'en'}});const tr=(text:string)=>t(text,language);const[initialWorld]=useState(()=>{try{return restore(localStorage.getItem(SAVE_KEY))}catch{return restore(null)}});const world=useRef(initialWorld);const[,render]=useState(0);const[mode,setMode]=useState<'observer'|'inhabitant'>('observer');const[selected,select]=useState<PersonId|null>('mira');const[paused,pause]=useState(false);const[walkingDestination,setWalkingDestination]=useState<WalkingDestination>("praca");const[showResidentRoute,setShowResidentRoute]=useState(false);const[wideMap,setWideMap]=useState(()=>{try{return localStorage.getItem('little-minds:expanded-map')==='true'}catch{return false}});const[speed,speedSet]=useState(1);const[tab,setTab]=useState('life');const[journalQuery,setJournalQuery]=useState('');const[journalResident,setJournalResident]=useState<PersonId|''>('');const[saved,setSaved]=useState(true);const[sound,setSound]=useState(false);
@@ -107,17 +111,34 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
     !(entry.kind==='social'&&entry.text.includes(profiles[journalResident].name)))return false;
   return !query||journalSearchKey(eventText(entry,language)).includes(query);
  });
- const nearWorkshop=Math.hypot(w.player.x-places.theo.x,w.player.y-places.theo.y)<=35;
- const nearNursery=Math.hypot(w.player.x-332,w.player.y-300)<=36;
- function enterWorkshop(room:'workshop'|'nursery'='workshop'){
-
-  if(mode!=='inhabitant'||!bridge.current.inputEnabled||
-     !(room==='workshop'?nearWorkshop:nearNursery))return;
-  bridge.current.direction={x:0,y:0};
-  bridge.current.cancelNavigation=true;
-  bridge.current.sitting=false;
+ const entryPoints={workshop:places.theo,nursery:nurseryDoor};
+ const nearWorkshop=nearEntrance(w.player,entryPoints.workshop,35);
+ const nearNursery=nearEntrance(w.player,entryPoints.nursery,24);
+ const enterWorkshop=useCallback((room:'workshop'|'nursery'='workshop')=>{
+  const game=bridge.current;
+  const door=room==='workshop'?places.theo:nurseryDoor;
+  if(game.mode!=='inhabitant'||!game.inputEnabled||
+     !nearEntrance(game.world.player,door,room==='workshop'?35:24))return;
+  game.direction={x:0,y:0};
+  game.cancelNavigation=true;
+  game.sitting=false;
   setWorkshopOpen(room);
- }
+ },[]);
+ useEffect(()=>{
+  function onEntryKey(event:KeyboardEvent){
+   if(event.defaultPrevented||event.repeat||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||
+      event.key.toLowerCase()!=='i')return;
+   if(event.target instanceof Element&&event.target.closest('input,textarea,select,[contenteditable],dialog'))return;
+   const game=bridge.current;
+   if(game.mode!=='inhabitant'||!game.inputEnabled)return;
+   if(nearEntrance(game.world.player,nurseryDoor,24))enterWorkshop('nursery');
+   else if(nearEntrance(game.world.player,places.theo,35))enterWorkshop();
+   else return;
+   event.preventDefault();
+  }
+  window.addEventListener('keydown',onEntryKey);
+  return()=>window.removeEventListener('keydown',onEntryKey);
+ },[enterWorkshop]);
  function toggleBench(){
   if(mode!=='inhabitant'||!bridge.current.inputEnabled)return;
   if(!bridge.current.sitting&&!nearbyBench(world.current.player))return;
@@ -143,14 +164,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  }
  function arrange(task:TaskId){if(startActivity(world.current,task)){persist();setConversation(null);setMode('inhabitant');render(n=>n+1)}}
  function saveCharacter(profile:AvatarProfile){world.current.playerProfile=normalizeAvatar(profile);try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}setEditorOpen(false);setMode('inhabitant');setNotice('A tua personagem está pronta. A ilha espera por ti!');render(n=>n+1);}
- return <div className="app" onKeyDown={event=>{
-  if(event.defaultPrevented||event.repeat||event.ctrlKey||event.metaKey||event.altKey||
-     event.key.toLowerCase()!=='i'||mode!=='inhabitant'||!bridge.current.inputEnabled)return;
-  if((event.target as HTMLElement).closest('input,textarea,select,[contenteditable],dialog'))return;
-  if(!nearNursery&&!nearWorkshop)return;
-  event.preventDefault();
-  enterWorkshop(nearNursery?'nursery':'workshop');
- }}><header><a className="brand" href="#" aria-label={tr("Little Minds início")}><span className="brand-icon">✦</span><span>{tr('little minds')}<small>{tr('PEQUENAS VIDAS. GRANDES HISTÓRIAS.')}</small></span></a><div className="island-name"><span className="live-dot"/>{tr('Ilha Aurora')}<span className="tag">{tr('ALPHA 0.1')}</span></div><div className="header-settings"><button className="character-button" onClick={()=>setEditorOpen(true)} aria-label={tr('Editar personagem')}><UserRound size={16}/><span>{tr('A tua personagem')}</span></button><select className="language-select" aria-label="Language / Idioma" value={language} onChange={e=>{setLanguage(e.target.value as Language);setNotice('')}}><option value="en">English</option><option value="pt-PT">Português (PT)</option></select><button className="icon-button" onClick={toggleSound} aria-label={tr(sound?'Desligar ambiente sonoro':'Ligar ambiente sonoro')}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}</button></div></header>
+ return <div className="app"><header><a className="brand" href="#" aria-label={tr("Little Minds início")}><span className="brand-icon">✦</span><span>{tr('little minds')}<small>{tr('PEQUENAS VIDAS. GRANDES HISTÓRIAS.')}</small></span></a><div className="island-name"><span className="live-dot"/>{tr('Ilha Aurora')}<span className="tag">{tr('ALPHA 0.1')}</span></div><div className="header-settings"><button className="character-button" onClick={()=>setEditorOpen(true)} aria-label={tr('Editar personagem')}><UserRound size={16}/><span>{tr('A tua personagem')}</span></button><select className="language-select" aria-label="Language / Idioma" value={language} onChange={e=>{setLanguage(e.target.value as Language);setNotice('')}}><option value="en">English</option><option value="pt-PT">Português (PT)</option></select><button className="icon-button" onClick={toggleSound} aria-label={tr(sound?'Desligar ambiente sonoro':'Ligar ambiente sonoro')}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}</button></div></header>
  <main><section className="intro"><div><div className="eyebrow">{tr('UM PEQUENO MUNDO VIVO')}</div><h1>{tr('A vida acontece aqui')}<span>.</span></h1><p>{tr('Sem pressa. Cada encontro pode ser o início de uma história.')}</p></div><div className="world-clock">{night?<Moon size={24}/>:<Sun size={26}/>}<div><strong>{timeLabel(w.minute)}</strong><small>{tr('Dia')} {w.day} <span>·</span> {tr(weatherAt(w.day,w.minute)!=='clear'?weatherLabels[weatherAt(w.day,w.minute)]:night?'Sob as estrelas':h>17?'Fim de tarde':'Céu tranquilo')}</small></div></div></section>
  <div className={wideMap ? "workspace wide-map" : "workspace"}><section className="world-panel"><div className="world-toolbar"><div className="mode-switch"><button className={mode==='observer'?'active':''} onClick={()=>changeMode('observer')}><Eye size={15}/>{tr('Observador')}</button><button className={mode==='inhabitant'?'active':''} onClick={()=>changeMode('inhabitant')}><Footprints size={15}/>{tr('Habitante')}</button></div><div className="simulation-controls"><button type="button" onClick={takePhoto}
   title={tr('Tirar fotografia')} aria-label={tr('Tirar fotografia')}><Camera size={15}/></button><button
@@ -201,7 +215,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  {mode==='inhabitant'&&<form className="map-tracking map-walk" onSubmit={event=>{
   event.preventDefault();
   if(bridge.current.inputEnabled){
-   bridge.current.navigationRequest={target:places[walkingDestination],label:placeLabels[walkingDestination]};
+   bridge.current.navigationRequest={target:walkingDestination==='nursery'?nurseryDoor:places[walkingDestination],label:placeLabels[walkingDestination]};
   }
  }}>
   <label htmlFor="walking-destination">{tr('Destino a pé')}</label>

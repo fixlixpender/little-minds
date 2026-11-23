@@ -1,3 +1,4 @@
+import {nurseryDoor} from './nursery';
 import {drawSea} from './sea';
 import{weatherAt,weatherStrength}from './weather';
 import{actorCue,facingFromMovement,type Facing,type ActorCue}from './actorVisual';
@@ -38,6 +39,8 @@ export class Island extends Phaser.Scene{
  rect(370,289,6,6,'#b67b58');
  rect(354,286,8,3,'#66864f');
  rect(369,286,8,3,'#66864f');
+ rect(nurseryDoor.x-4,nurseryDoor.y-16,8,10,'#345846');
+ rect(nurseryDoor.x-6,nurseryDoor.y-6,12,3,'#c0ac83');
  // Central circular plaza and fountain.
  g.fillStyle='#c0b391';g.beginPath();g.ellipse(460,350,55,33,0,0,7);g.fill();for(let i=0;i<90;i++){const a=rand()*7,r=rand()*45;rect(460+Math.cos(a)*r,350+Math.sin(a)*r*.55,7,2,'#a3997e');}g.fillStyle='#827f70';g.beginPath();g.ellipse(460,346,16,10,0,0,7);g.fill();g.fillStyle='#739e9a';g.beginPath();g.ellipse(460,343,12,6,0,0,7);g.fill();rect(457,329,6,14,'#d3c8a6');rect(454,328,12,4,'#d3c8a6');
  // Jetty.
