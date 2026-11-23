@@ -1,4 +1,5 @@
-export const nurseryDoor = {x:364,y:304};
+export const nurseryDoor = {x:366,y:309};
+export const nurseryEntryRadius = 35;
 
 export type Nursery = {waterings:number; lastWateredDay:number};
 

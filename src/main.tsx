@@ -1,4 +1,4 @@
-import {nurseryDoor,nurseryStage,waterNursery} from './nursery';
+import {nurseryDoor,nurseryEntryRadius,nurseryStage,waterNursery} from './nursery';
 import {Workshop} from './Workshop';
 import {ambientMix, createAmbientAudio} from './ambientAudio';
 import {ALBUM_LIMIT,loadAlbum,saveAlbum,type IslandPhoto} from './album';
@@ -113,12 +113,12 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  });
  const entryPoints={workshop:places.theo,nursery:nurseryDoor};
  const nearWorkshop=nearEntrance(w.player,entryPoints.workshop,35);
- const nearNursery=nearEntrance(w.player,entryPoints.nursery,24);
+ const nearNursery=nearEntrance(w.player,entryPoints.nursery,nurseryEntryRadius);
  const enterWorkshop=useCallback((room:'workshop'|'nursery'='workshop')=>{
   const game=bridge.current;
   const door=room==='workshop'?places.theo:nurseryDoor;
   if(game.mode!=='inhabitant'||!game.inputEnabled||
-     !nearEntrance(game.world.player,door,room==='workshop'?35:24))return;
+     !nearEntrance(game.world.player,door,room==='workshop'?35:nurseryEntryRadius))return;
   game.direction={x:0,y:0};
   game.cancelNavigation=true;
   game.sitting=false;
@@ -131,7 +131,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    if(event.target instanceof Element&&event.target.closest('input,textarea,select,[contenteditable],dialog'))return;
    const game=bridge.current;
    if(game.mode!=='inhabitant'||!game.inputEnabled)return;
-   if(nearEntrance(game.world.player,nurseryDoor,24))enterWorkshop('nursery');
+   if(nearEntrance(game.world.player,nurseryDoor,nurseryEntryRadius))enterWorkshop('nursery');
    else if(nearEntrance(game.world.player,places.theo,35))enterWorkshop();
    else return;
    event.preventDefault();
