@@ -1,3 +1,4 @@
+import type {Nursery} from './nursery';
 import {residentTalkText} from './residentTalk';
 import {activities,freshCommunity,normalizeCommunity,normalizeActivity,type Community,type SharedActivity,type TaskId,type ActivityPhase} from './activityState';
 import {createBonds,normalizeBonds,type PlayerBonds,type Topic} from './socialState';
@@ -9,7 +10,7 @@ export type Place=keyof typeof places;
 export const profiles={mira:{name:'Mira',role:'Botânica',color:'#b3cc9d',traits:'Introvertida · curiosa · cautelosa',quote:'Há coisas que só crescem quando lhes damos tempo.'},theo:{name:'Theo',role:'Inventor',color:'#e6b56f',traits:'Criativo · impulsivo · bem-humorado',quote:'E se a solução estiver na peça que sobrou?'},luma:{name:'Luma',role:'Astrónoma',color:'#b8afe0',traits:'Independente · filosófica · curiosa',quote:'Pergunto-me quem terá apagado a última luz do farol.'}};
 export type Resident={id:PersonId;x:number;y:number;target:Place;activity:string;energy:number};
 export type Entry={id:number;day:number;minute:number;text:string;person?:PersonId;kind:'life'|'social'|'discovery';conversation?:{topic:Topic;reply:string};residentTalk?:{pair:string;variant:number};shared?:{task:TaskId;phase:ActivityPhase;chapter?:number}};
-export type World={version:1;day:number;minute:number;residents:Resident[];events:Entry[]; favoriteEntries?:Entry[];relationships:Record<string,number>;player:Point;playerProfile:AvatarProfile;playerBonds:PlayerBonds;community:Community;sharedActivity:SharedActivity|null;lighthouseClueFound?:boolean;lastSlot:number;nextId:number};
+export type World={version:1;day:number;minute:number;residents:Resident[];events:Entry[]; favoriteEntries?:Entry[];relationships:Record<string,number>;player:Point;playerProfile:AvatarProfile;playerBonds:PlayerBonds;community:Community;sharedActivity:SharedActivity|null;lighthouseClueFound?:boolean;nursery?:Nursery;lastSlot:number;nextId:number};
 export function createWorld():World{return {version:1,day:1,minute:8*60,residents:(['mira','theo','luma'] as PersonId[]).map(id=>({id,...places[id],target:id,activity:'A começar o dia',energy:92})),events:[{id:1,day:1,minute:480,text:'Uma nova manhã chega à Ilha Aurora.',kind:'life'}],relationships:{'mira-theo':24,'luma-mira':31,'luma-theo':19},player:{x:460,y:400},playerProfile:{...defaultAvatar},playerBonds:createBonds(),community:freshCommunity(),sharedActivity:null,lastSlot:-1,nextId:2};}
 export interface DecisionProvider{decide(resident:Resident,world:World):{target:Place;activity:string}}
 // Future server-side OpenRouter adapters implement this contract. No API keys or network calls here.

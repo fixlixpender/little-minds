@@ -6,7 +6,24 @@ export function readLanguage(storage: Pick<Storage, 'getItem'>): Language {
 // World saves retain their original text. Translate known local content only at
 // presentation time, so language switches never reset or rewrite world memories.
 const translations: Record<string, string> = {
- 'Entrar na oficina junto à porta ou examinar um objeto lá dentro':'Enter the workshop at the door or inspect an object inside',
+  'Ventoinha de bancada':'Bench fan',
+  'A pequena hélice começa a rodar.':'The little fan starts spinning.',
+  'A hélice parou.':'The fan stopped.',
+  'Ligar ventoinha':'Switch on fan',
+  'Desligar ventoinha':'Switch off fan',
+  'Viveiro da Mira':'Mira’s nursery',
+  'Entrar no viveiro':'Enter nursery',
+  'Sair do viveiro':'Leave nursery',
+  'Vasos da Mira':'Mira’s pots',
+  'Vaso de muda':'Seedling pot',
+  'As etiquetas dizem hortelã, tomilho e alecrim.':'The labels read mint, thyme and rosemary.',
+  'A Mira deixou um pequeno regador ao lado do vaso.':'Mira left a little watering can beside the pot.',
+  'Regar a muda':'Water the seedling',
+  'Regaste a muda. Volta noutro dia para veres como cresceu.':'You watered the seedling. Come back another day to see how it grew.',
+  'Esta muda já foi regada hoje.':'This seedling has already been watered today.',
+  'A planta já floresceu.':'The plant has already bloomed.',
+
+ 'Entrar num interior ou interagir com um objeto próximo':'Enter an interior or interact with a nearby object',
  'Entrar na oficina':'Enter workshop','Sair da oficina':'Leave workshop',
  'Bancada':'Workbench','Maquete do barco':'Model boat','Examinar':'Inspect',
  'Limas, alicates e parafusos, todos separados por tamanho.':'Files, pliers and screws, all sorted by size.',

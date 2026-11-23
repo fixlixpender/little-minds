@@ -1,12 +1,22 @@
 import {useEffect, useRef, useState} from 'react';
 import {t, type Language} from './i18n';
 
-const stations = [
+const workshopStations = [
   {x:2,y:1,style:'bench',label:'Bancada',detail:'Limas, alicates e parafusos, todos separados por tamanho.'},
   {x:6,y:1,style:'model',label:'Maquete do barco',detail:'O casco é de madeira e a vela é um retalho de pano azul.'},
+  {x:4,y:0,style:'machine',label:'Ventoinha de bancada',detail:'A pequena hélice começa a rodar.'},
 ] as const;
+const nurseryStations = [
+  {x:2,y:1,style:'pots',label:'Vasos da Mira',detail:'As etiquetas dizem hortelã, tomilho e alecrim.'},
+  {x:6,y:1,style:'plant',label:'Vaso de muda',detail:'A Mira deixou um pequeno regador ao lado do vaso.'},
+] as const;
+const inspectionMessages = ['A hélice parou.','Regaste a muda. Volta noutro dia para veres como cresceu.',
+ 'Esta muda já foi regada hoje.','A planta já floresceu.'] as const;
 
-export function Workshop({language,onClose}:{language:Language;onClose:()=>void}){
+export function Workshop({language,onClose,nursery}:{language:Language;onClose:()=>void;
+ nursery?:{stage:number;water:()=>string}}){
+  const stations=nursery?nurseryStations:workshopStations;
+  const [machineOn,setMachineOn]=useState(false);
   const dialog=useRef<HTMLDialogElement>(null);
   const [position,setPosition]=useState({x:4,y:4});
   const [detail,setDetail]=useState('');
@@ -18,6 +28,15 @@ export function Workshop({language,onClose}:{language:Language;onClose:()=>void}
     element.showModal();
     return()=>element.close();
   },[]);
+
+  function interact(item: (typeof stations)[number]){
+    if(item.style==='machine'){
+      setMachineOn(!machineOn);
+      setDetail(machineOn?'A hélice parou.':item.detail);
+    }else if(item.style==='plant'&&nursery){
+      setDetail(nursery.water());
+    }else setDetail(item.detail);
+  }
 
   function move(dx:number,dy:number){
     setPosition(current=>{
@@ -32,7 +51,7 @@ export function Workshop({language,onClose}:{language:Language;onClose:()=>void}
     onKeyDown={event=>{
       if(event.ctrlKey||event.metaKey||event.altKey)return;
       if(event.key.toLowerCase()==='i'){
-        if(station&&!event.repeat)setDetail(station.detail);
+        if(station&&!event.repeat)interact(station);
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -44,9 +63,9 @@ export function Workshop({language,onClose}:{language:Language;onClose:()=>void}
       event.stopPropagation();
       move(...step);
     }}>
-    <h2 id="workshop-title">{tr('Oficina do Theo')}</h2>
-    <div className="workshop-room" aria-hidden="true">
-      {stations.map(item=><div key={item.style} className={`workshop-prop ${item.style}`} style={{gridColumn:item.x+1,gridRow:item.y+1}}/>)}
+    <h2 id="workshop-title">{tr(nursery?'Viveiro da Mira':'Oficina do Theo')}</h2>
+    <div className={nursery?"workshop-room nursery-room":"workshop-room"} aria-hidden="true">
+      {stations.map(item=><div key={item.style} className={`workshop-prop ${item.style}${item.style==='machine'&&machineOn?' running':''}`} style={{gridColumn:item.x+1,gridRow:item.y+1}} data-stage={item.style==='plant'?nursery?.stage:undefined}/>)}
       <div className="workshop-door"/>
       <div className="workshop-player" style={{gridColumn:position.x+1,gridRow:position.y+1}}/>
     </div>
@@ -54,18 +73,18 @@ export function Workshop({language,onClose}:{language:Language;onClose:()=>void}
     <div className="workshop-actions">
       {([['Mover up','↑',0,-1],['Mover left','←',-1,0],['Mover down','↓',0,1],['Mover right','→',1,0]] as const).map(([label,arrow,x,y])=>
         <button key={label} type="button" className="resident-route-toggle" aria-label={tr(label)} onClick={()=>move(x,y)}>{arrow}</button>)}
-      <button type="button" className="resident-route-toggle" onClick={onClose}>{tr('Sair da oficina')}</button>
+      <button type="button" className="resident-route-toggle" onClick={onClose}>{tr(nursery?'Sair do viveiro':'Sair da oficina')}</button>
     </div>
     <div className="workshop-inspection">
       {stations.map(item=><button key={item.style} type="button"
         className="resident-route-toggle" disabled={station!==item}
         style={{visibility:station===item?'visible':'hidden'}}
-        onClick={()=>setDetail(item.detail)}>
-        {tr('Examinar')}: {tr(item.label)}
+        onClick={()=>interact(item)}>
+        {item.style==='machine'?tr(machineOn?'Desligar ventoinha':'Ligar ventoinha'):item.style==='plant'?tr('Regar a muda'):`${tr('Examinar')}: ${tr(item.label)}`}
       </button>)}
     </div>
     <div className="workshop-inspection">
-      {stations.map(item=><p key={item.style} aria-hidden="true" className="workshop-detail-placeholder">{tr(item.detail)}</p>)}
+      {[...stations.map(item=>item.detail),...inspectionMessages].map(message=><p key={message} aria-hidden="true" className="workshop-detail-placeholder">{tr(message)}</p>)}
       <p role="status">{detail&&tr(detail)}</p>
     </div>
   </dialog>;

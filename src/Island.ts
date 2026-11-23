@@ -28,6 +28,16 @@ export class Island extends Phaser.Scene{
  // Garden beds and tiny vegetables.
  for(let row=0;row<3;row++)for(let col=0;col<2;col++){const x=265+col*40,y=266+row*20;rect(x,y,33,14,'#655840');rect(x,y,33,2,'#aa9165');for(let n=0;n<4;n++){rect(x+4+n*7,y+5,4,5,'#83ab63');rect(x+5+n*7,y+8,2,3,row===1?'#cf985d':'#b7c27b');}}
  for(let i=0;i<7;i++){rect(256+i*15,260,3,70,'#baa888');rect(256+i*15,265,12,2,'#baa888');}
+ // Mira's glass nursery beside the garden.
+ rect(345,274,37,24,'#486851');
+ rect(348,271,31,24,'#8bb3a0');
+ rect(350,275,27,17,'#a5c5ae');
+ rect(362,271,3,24,'#537b66');
+ rect(350,282,27,2,'#d4dfbc');
+ rect(355,289,6,6,'#b67b58');
+ rect(370,289,6,6,'#b67b58');
+ rect(354,286,8,3,'#66864f');
+ rect(369,286,8,3,'#66864f');
  // Central circular plaza and fountain.
  g.fillStyle='#c0b391';g.beginPath();g.ellipse(460,350,55,33,0,0,7);g.fill();for(let i=0;i<90;i++){const a=rand()*7,r=rand()*45;rect(460+Math.cos(a)*r,350+Math.sin(a)*r*.55,7,2,'#a3997e');}g.fillStyle='#827f70';g.beginPath();g.ellipse(460,346,16,10,0,0,7);g.fill();g.fillStyle='#739e9a';g.beginPath();g.ellipse(460,343,12,6,0,0,7);g.fill();rect(457,329,6,14,'#d3c8a6');rect(454,328,12,4,'#d3c8a6');
  // Jetty.

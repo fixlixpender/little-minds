@@ -1,3 +1,4 @@
+import {nurseryStage,waterNursery} from './nursery';
 import {Workshop} from './Workshop';
 import {ambientMix, createAmbientAudio} from './ambientAudio';
 import {ALBUM_LIMIT,loadAlbum,saveAlbum,type IslandPhoto} from './album';
@@ -26,7 +27,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    if(stored!==null&&Number.isFinite(Number(stored)))return Math.max(0,Math.min(100,Number(stored)));
   }catch{}
   return 100;
- });const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[workshopOpen,setWorkshopOpen]=useState(false);const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const ambientAudio=useRef<ReturnType<typeof createAmbientAudio>|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!workshopOpen&&!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
+ });const[arrival,setArrival]=useState<{label:string}|null>(null);const[notice,setNotice]=useState('');const[workshopOpen,setWorkshopOpen]=useState<false|'workshop'|'nursery'>(false);const[editorOpen,setEditorOpen]=useState(false);const[conversation,setConversation]=useState<PersonId|null>(null);const host=useRef<HTMLDivElement>(null);const[albumOpen,setAlbumOpen]=useState(false);const[photos,setPhotos]=useState(()=>loadAlbum(localStorage));const album=useRef(photos);const gameRef=useRef<Phaser.Game|null>(null);const audio=useRef<AudioContext|null>(null);const ambientAudio=useRef<ReturnType<typeof createAmbientAudio>|null>(null);const bridge=useRef<Bridge>({world:world.current,mode,selected,showResidentRoute,paused,speed,language,inputEnabled:!workshopOpen&&!editorOpen&&!conversation,navigationRequest:null,sitting:false,walkingLabel:null,onArrival:label=>setArrival({label}),cancelNavigation:false,walkingAutomatically:false,direction:{x:0,y:0},onSelect:select,onInteract:()=>{}});
  function persist(){try{localStorage.setItem(SAVE_KEY,serialize(world.current));setSaved(true)}catch{setSaved(false)}}
  function updateAlbum(next:IslandPhoto[]){
   try{
@@ -58,7 +59,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   },'image/png');
  }
  function interact(target?:PersonId){if(editorOpen||conversation)return;const w=world.current;const nearest=target?w.residents.find(r=>r.id===target)!:[...w.residents].sort((a,b)=>Math.hypot(a.x-w.player.x,a.y-w.player.y)-Math.hypot(b.x-w.player.x,b.y-w.player.y))[0];if(Math.hypot(nearest.x-w.player.x,nearest.y-w.player.y)>70){setNotice('Aproxima-te de um habitante para conversar.');return;}select(nearest.id);setNotice('');bridge.current.direction={x:0,y:0};setConversation(nearest.id);}
- Object.assign(bridge.current,{mode,selected,showResidentRoute,paused:paused||workshopOpen||editorOpen||conversation!==null,speed,language,inputEnabled:!workshopOpen&&!editorOpen&&!conversation,onInteract:()=>interact()});
+ Object.assign(bridge.current,{mode,selected,showResidentRoute,paused:paused||Boolean(workshopOpen)||editorOpen||conversation!==null,speed,language,inputEnabled:!workshopOpen&&!editorOpen&&!conversation,onInteract:()=>interact()});
  useEffect(()=>{
   try{localStorage.setItem('little-minds:expanded-map',String(wideMap))}catch{}
  },[wideMap]);
@@ -107,13 +108,15 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   return !query||journalSearchKey(eventText(entry,language)).includes(query);
  });
  const nearWorkshop=Math.hypot(w.player.x-places.theo.x,w.player.y-places.theo.y)<=35;
- function enterWorkshop(){
+ const nearNursery=Math.hypot(w.player.x-332,w.player.y-300)<=36;
+ function enterWorkshop(room:'workshop'|'nursery'='workshop'){
+
   if(mode!=='inhabitant'||!bridge.current.inputEnabled||
-     !nearWorkshop)return;
+     !(room==='workshop'?nearWorkshop:nearNursery))return;
   bridge.current.direction={x:0,y:0};
   bridge.current.cancelNavigation=true;
   bridge.current.sitting=false;
-  setWorkshopOpen(true);
+  setWorkshopOpen(room);
  }
  function toggleBench(){
   if(mode!=='inhabitant'||!bridge.current.inputEnabled)return;
@@ -155,7 +158,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    case 'o': changeMode('observer'); break;
    case 'h': changeMode('inhabitant'); break;
    case 'b': toggleBench(); break;
-   case 'i': enterWorkshop(); break;
+   case 'i': enterWorkshop(nearNursery?'nursery':'workshop'); break;
    case 'f': inspectLighthouse(); break;
    case 'x': if(mode==='inhabitant')stopWalking(); break;
    case 'p': pause(value=>!value); break;
@@ -171,7 +174,9 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
   {bridge.current.walkingLabel
    ?tr('A caminhar para {destino}').replace('{destino}',tr(bridge.current.walkingLabel))
    :tr('Chegaste: {destino}').replace('{destino}',tr(arrival!.label))}
- </span>}<div className="map-caption"><Compass size={14}/><span>{tr('ILHA AURORA')}</span><span className="coordinates">{tr('38° N · 27° W')}</span></div><div className="map-weather">{weatherAt(w.day,w.minute)==='rain'?<CloudRain size={14}/>:weatherAt(w.day,w.minute)==='mist'?<CloudFog size={14}/>:<CloudSun size={14}/>}<span>{tr(weatherLabels[weatherAt(w.day,w.minute)])}</span></div>{notice&&<div role="status" className="speech">{tr(notice)}</div>}{mode==='inhabitant'&&<>{nearWorkshop&&<button type="button" className="talk-button inspect-map" onClick={enterWorkshop}>
+ </span>}<div className="map-caption"><Compass size={14}/><span>{tr('ILHA AURORA')}</span><span className="coordinates">{tr('38° N · 27° W')}</span></div><div className="map-weather">{weatherAt(w.day,w.minute)==='rain'?<CloudRain size={14}/>:weatherAt(w.day,w.minute)==='mist'?<CloudFog size={14}/>:<CloudSun size={14}/>}<span>{tr(weatherLabels[weatherAt(w.day,w.minute)])}</span></div>{notice&&<div role="status" className="speech">{tr(notice)}</div>}{mode==='inhabitant'&&<>{nearNursery&&<button type="button" className="talk-button inspect-map" onClick={()=>enterWorkshop('nursery')}>
+  {tr('Entrar no viveiro')}
+ </button>}{nearWorkshop&&<button type="button" className="talk-button inspect-map" onClick={()=>enterWorkshop()}>
   {tr('Entrar na oficina')}
  </button>}{nearLighthouse(w)&&<button className="talk-button inspect-map" onClick={inspectLighthouse}><Sparkles size={14}/>{tr(w.lighthouseClueFound?'Reler a inscrição':'Examinar as marcas')}</button>}<div className="dpad">{[['up',0,-1,ChevronUp],['left',-1,0,ChevronLeft],['down',0,1,ChevronDown],['right',1,0,ChevronRight]].map(([name,x,y,Icon])=>{const I=Icon as typeof ChevronUp;return <button key={String(name)} className={String(name)} aria-label={tr(`Mover ${name}`)} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);bridge.current.direction={x:Number(x),y:Number(y)}}} onPointerUp={()=>bridge.current.direction={x:0,y:0}} onPointerCancel={()=>bridge.current.direction={x:0,y:0}}><I size={18}/></button>})}</div><button className="talk-button" onClick={()=>interact()}><MessageCircle size={16}/>{tr('Conversar')}</button></>}</div>
  {mode==='observer'&&r&&profile&&<div className="map-tracking">
@@ -221,7 +226,7 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    <div><dt><kbd>H</kbd></dt><dd>{tr('Habitante')}</dd></div>
    <div><dt><kbd>B</kbd></dt><dd>{tr('Sentar ou levantar junto a um banco')}</dd></div>
    <div><dt><kbd>F</kbd></dt><dd>{tr('Examinar as marcas junto ao farol')}</dd></div>
-   <div><dt><kbd>I</kbd></dt><dd>{tr('Entrar na oficina junto à porta ou examinar um objeto lá dentro')}</dd></div>
+   <div><dt><kbd>I</kbd></dt><dd>{tr('Entrar num interior ou interagir com um objeto próximo')}</dd></div>
    <div><dt><kbd>Esc</kbd></dt><dd>{tr('Sair da oficina')}</dd></div>
    <div><dt><kbd>X</kbd></dt><dd>{tr('Parar caminhada')}</dd></div>
    <div><dt><kbd>P</kbd></dt><dd>{tr('Pausar ou retomar')}</dd></div>
@@ -258,8 +263,11 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
    </div>
   </div>
  </section>
+ {mode==='inhabitant'&&nearNursery&&<div className="map-tracking">
+   <button type="button" className="resident-route-toggle" onClick={()=>enterWorkshop('nursery')}>{tr('Entrar no viveiro')}</button>
+  </div>}
  {mode==='inhabitant'&&nearWorkshop&&
-  <div className="map-tracking"><button type="button" className="resident-route-toggle" onClick={enterWorkshop}>
+  <div className="map-tracking"><button type="button" className="resident-route-toggle" onClick={()=>enterWorkshop()}>
    {tr('Entrar na oficina')}
   </button></div>}
  <ActivityPanel world={w} language={language} onGo={()=>{if(w.sharedActivity){setMode('inhabitant');bridge.current.navigationRequest={target:places[activities[w.sharedActivity.task].place],label:placeLabels[activities[w.sharedActivity.task].place]};}}} onCancel={()=>{cancelActivity(w);persist();render(n=>n+1)}}/>
@@ -283,6 +291,14 @@ function App(){const[language,setLanguage]=useState<Language>(()=>{try{return re
  {profile&&r&&<section className="profile"><div className="profile-top"><span className={`portrait small ${selected}`}><span className="pixel-person"/></span><div><h3>{profile.name}</h3><span>{tr(profile.role)}</span></div>{selected==='mira'?<Leaf size={19}/>:selected==='theo'?<Sparkles size={19}/>:<Telescope size={19}/>}</div><p className="quote">“{tr(profile.quote)}”</p><div className="traits">{tr(profile.traits)}</div><div className="energy-label"><span>{tr('Energia')}</span><span>{Math.round(r.energy)}%</span></div><div className="energy"><i style={{width:`${r.energy}%`,background:profile.color}}/></div><div className="relationships">{w.residents.filter(other=>other.id!==selected).map(other=><span key={other.id}>{profiles[other.id].name}<b>{w.relationships[[selected!,other.id].sort().join('-')]||20}<small>/100</small></b></span>)}</div><div className="player-bond"><div className="bond-heading"><span>{tr('Laço contigo')}</span><strong>{tr(bondLabel(w.playerBonds[selected!].affinity))} · {w.playerBonds[selected!].affinity}/100</strong></div><div className="energy"><i style={{width:`${w.playerBonds[selected!].affinity}%`,background:profile.color}}/></div></div>{mode==='inhabitant'&&<button className="profile-action" onClick={()=>{bridge.current.navigationRequest={target:r.id,label:profile.name}}}>
   {tr('Caminhar até ao habitante')}<Footprints size={14} aria-hidden="true"/>
  </button>}{mode==='inhabitant'&&<button className="profile-action" onClick={()=>interact(selected!)}>{tr('Conversar por perto')}<ArrowUpRight size={14}/></button>}</section>}
- </aside></div><footer><span>✦ <b>{tr('Little Minds')}</b> <span>{tr('Um lugar para simplesmente existir.')}</span></span><span className={saved?'save':'save failed'}><Check size={12}/>{tr(saved?'Progresso guardado neste dispositivo':'Não foi possível guardar neste navegador')}</span></footer></main>{workshopOpen&&<Workshop language={language} onClose={()=>setWorkshopOpen(false)}/>}{editorOpen&&<CharacterEditor profile={w.playerProfile} language={language} onSave={saveCharacter} onClose={()=>setEditorOpen(false)}/>}{conversation&&<Conversation world={w} id={conversation} language={language} onClose={()=>setConversation(null)} onActivity={arrange} onChange={()=>{persist();render(n=>n+1)}}/>}</div>
+ </aside></div><footer><span>✦ <b>{tr('Little Minds')}</b> <span>{tr('Um lugar para simplesmente existir.')}</span></span><span className={saved?'save':'save failed'}><Check size={12}/>{tr(saved?'Progresso guardado neste dispositivo':'Não foi possível guardar neste navegador')}</span></footer></main>{workshopOpen&&<Workshop language={language} onClose={()=>setWorkshopOpen(false)}
+ nursery={workshopOpen==='nursery'?{stage:nurseryStage(w.day,w.nursery),water:()=>{
+  const next=waterNursery(w.day,w.nursery);
+  if(!next)return nurseryStage(w.day,w.nursery)===3?'A planta já floresceu.':'Esta muda já foi regada hoje.';
+  w.nursery=next;
+  persist();
+  render(n=>n+1);
+  return 'Regaste a muda. Volta noutro dia para veres como cresceu.';
+ }}:undefined}/>}{editorOpen&&<CharacterEditor profile={w.playerProfile} language={language} onSave={saveCharacter} onClose={()=>setEditorOpen(false)}/>}{conversation&&<Conversation world={w} id={conversation} language={language} onClose={()=>setConversation(null)} onActivity={arrange} onChange={()=>{persist();render(n=>n+1)}}/>}</div>
 }
 createRoot(document.getElementById('root')!).render(<App/>);

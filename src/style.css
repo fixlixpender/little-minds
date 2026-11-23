@@ -81,3 +81,18 @@
 .workshop-inspection{display:grid;justify-items:start}
 .workshop-inspection>*{grid-area:1/1}
 .workshop-detail-placeholder{visibility:hidden}
+.workshop-room{background-color:#997348;box-shadow:inset 0 12px #715239,inset 0 -5px #745638}
+.workshop-prop.bench{height:76%;box-shadow:4px 5px #60473388,-8px -8px #5d4936}
+.workshop-prop.bench:after{content:'';position:absolute;width:4px;height:12px;top:-9px;right:20%;background:#dad1a7;box-shadow:-11px -2px #b3b9ab,8px 13px #e2bb75}
+.workshop-prop.machine{width:60%;background:linear-gradient(transparent 70%,#5d4835 70%);display:grid;place-items:center}
+.workshop-prop.machine:before{content:'';width:65%;aspect-ratio:1;background:#9db3a0;clip-path:polygon(15% 0,50% 38%,85% 0,100% 15%,62% 50%,100% 85%,85% 100%,50% 62%,15% 100%,0 85%,38% 50%,0 15%)}
+.workshop-prop.machine.running:before{background:#eae0a3;animation:workshop-fan .6s steps(8) infinite}
+@keyframes workshop-fan{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.workshop-prop.machine.running:before{animation:none}}
+.nursery-room{border-color:#456f59;background:repeating-linear-gradient(0deg,#75896a 0 10px,#647955 10px 12px);box-shadow:inset 0 12px #a2be9b,inset 0 -5px #496649}
+.workshop-prop.pots{background:repeating-linear-gradient(90deg,#be7659 0 22%,transparent 22% 32%);height:39%;border-bottom:4px solid #59462f}
+.workshop-prop.plant{width:44%;height:33%;align-self:end;background:#b77558;border-bottom:4px solid #774b3d}
+.workshop-prop.plant:before{content:'';position:absolute;bottom:100%;left:45%;width:14%;height:0;background:#375a39}
+.workshop-prop.plant[data-stage="1"]:before{height:45%;box-shadow:-4px -3px #8aac62}
+.workshop-prop.plant[data-stage="2"]:before,.workshop-prop.plant[data-stage="3"]:before{height:100%;box-shadow:-5px -3px #8aac62,5px 2px #8aac62}
+.workshop-prop.plant[data-stage="3"]:after{content:'';position:absolute;left:30%;bottom:185%;width:45%;aspect-ratio:1;background:#e4be77}
